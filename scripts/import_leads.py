@@ -75,7 +75,19 @@ for rss_url in rss_urls[:100]:
                 continue
             title = html.unescape(re.sub(r"<[^>]*>", "", entry.findtext("{http://www.w3.org/2005/Atom}title") or "")).strip()
             slug = urllib.parse.urlparse(link).path.strip("/").split("/")
-            city = slug[0].replace("_", " ").title() if slug else ""
+            city_slugs = {
+                "moskva": "Москва", "sankt-peterburg": "Санкт-Петербург",
+                "novosibirsk": "Новосибирск", "ekaterinburg": "Екатеринбург",
+                "kazan": "Казань", "krasnodar": "Краснодар",
+                "nizhniy_novgorod": "Нижний Новгород", "chelyabinsk": "Челябинск",
+                "samara": "Самара", "ufa": "Уфа", "rostov-na-donu": "Ростов-на-Дону",
+                "perm": "Пермь", "voronezh": "Воронеж", "volgograd": "Волгоград",
+                "omsk": "Омск"
+            }
+            city = city_slugs.get(slug[0], "") if slug else ""
+            # RSS may include Avito catalogs, not individual listings.
+            if not city or not re.search(r"_[0-9]{7,}/?$", urllib.parse.urlparse(link).path):
+                continue
             title_lower = title.lower()
             niches = [
                 ("Модульные дома", ("модульн", "домокомплект")),
@@ -86,6 +98,8 @@ for rss_url in rss_urls[:100]:
                 ("Наружная реклама", ("вывеск", "наружн", "объёмные буквы"))
             ]
             niche = next((n for n, terms in niches if any(t in title_lower for t in terms)), "Другое")
+            if niche == "Другое":
+                continue
             items.append({"name": title[:200] or "Объявление из Google Alerts",
                           "city": city or "Не определён", "niche": niche,
                           "url": link, "issues": "", "recommend": "",
