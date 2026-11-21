@@ -55,6 +55,11 @@ if url:
 
 rss_errors = []
 rss_sources_ok = 0
+rss_entries_total = 0
+rss_direct_links = 0
+rss_rejected_other_city = 0
+rss_rejected_not_listing = 0
+rss_rejected_niche = 0
 for rss_url in rss_urls[:100]:
     try:
         parsed = urllib.parse.urlparse(rss_url)
@@ -63,6 +68,8 @@ for rss_url in rss_urls[:100]:
         root = ET.fromstring(get_bytes(rss_url))
         entries = root.findall("{http://www.w3.org/2005/Atom}entry")
         rss_sources_ok += 1
+        rss_entries_total += len(entries)
+        print(f"RSS {rss_sources_ok}: {len(entries)} записей")
         for entry in entries:
             link_node = entry.find("{http://www.w3.org/2005/Atom}link")
             link = link_node.get("href", "") if link_node is not None else ""
@@ -73,6 +80,7 @@ for rss_url in rss_urls[:100]:
                 link = params.get("url", params.get("q", [""]))[0]
             if not is_avito_link(link):
                 continue
+            rss_direct_links += 1
             title = html.unescape(re.sub(r"<[^>]*>", "", entry.findtext("{http://www.w3.org/2005/Atom}title") or "")).strip()
             slug = urllib.parse.urlparse(link).path.strip("/").split("/")
             city_slugs = {
@@ -86,7 +94,11 @@ for rss_url in rss_urls[:100]:
             }
             city = city_slugs.get(slug[0], "") if slug else ""
             # RSS may include Avito catalogs, not individual listings.
-            if not city or not re.search(r"_[0-9]{7,}/?$", urllib.parse.urlparse(link).path):
+            if not city:
+                rss_rejected_other_city += 1
+                continue
+            if not re.search(r"_[0-9]{7,}/?$", urllib.parse.urlparse(link).path):
+                rss_rejected_not_listing += 1
                 continue
             title_lower = title.lower()
             niches = [
@@ -99,6 +111,7 @@ for rss_url in rss_urls[:100]:
             ]
             niche = next((n for n, terms in niches if any(t in title_lower for t in terms)), "Другое")
             if niche == "Другое":
+                rss_rejected_niche += 1
                 continue
             items.append({"name": title[:200] or "Объявление из Google Alerts",
                           "city": city or "Не определён", "niche": niche,
@@ -146,5 +159,5 @@ for x in items:
 all_items = (new + list(previous.values()))[:300]
 OUT.write_text(json.dumps({"generated_at": today, "source_configured": True, "new_count": len(new),
                            "disclaimer": "Ссылки получены из внешнего источника или Google Alerts; открытость и актуальность объявлений на Авито не проверены.",
-                           "rss_sources_ok": rss_sources_ok, "rss_sources_total": min(len(rss_urls), 100), "rss_errors": len(rss_errors), "items": all_items}, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+                           "rss_sources_ok": rss_sources_ok, "rss_sources_total": min(len(rss_urls), 100), "rss_errors": len(rss_errors), "rss_entries_total": rss_entries_total, "rss_direct_links": rss_direct_links, "rss_rejected_other_city": rss_rejected_other_city, "rss_rejected_not_listing": rss_rejected_not_listing, "rss_rejected_niche": rss_rejected_niche, "items": all_items}, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 print(f"Получено {len(new)} новых кандидатов. RSS прочитано: {rss_sources_ok}/{min(len(rss_urls), 100)}. Актуальность Авито не утверждается.")
