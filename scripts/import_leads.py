@@ -16,11 +16,11 @@ OUT = pathlib.Path("candidates.json")
 url = os.environ.get("LEADS_FEED_URL", "").strip()
 # One or more RSS URLs separated by newlines, commas or semicolons.
 # Existing single-feed configuration remains supported.
-raw_rss = "\\n".join(filter(None, (
+raw_rss = "\n".join(filter(None, (
     os.environ.get("GOOGLE_ALERTS_RSS_URL", ""),
     os.environ.get("GOOGLE_ALERTS_RSS_URLS", "")
 )))
-rss_urls = list(dict.fromkeys(x.strip() for x in re.split(r"[\\n;,]+", raw_rss) if x.strip()))
+rss_urls = list(dict.fromkeys(x.strip() for x in re.split(r"[\n;,]+", raw_rss) if x.strip()))
 today = dt.datetime.now(dt.timezone.utc).isoformat()
 
 def is_avito_link(value):
