@@ -1,0 +1,28 @@
+name: Import permitted lead feed
+on:
+  schedule:
+    - cron: '15 12 * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Import candidates from configured permitted source
+        env:
+          LEADS_FEED_URL: ${{ vars.LEADS_FEED_URL }}
+        run: python scripts/import_leads.py
+      - name: Publish updated results if any
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add candidates.json 2>/dev/null || true
+          if ! git diff --cached --quiet; then
+            git commit -m "Update candidates from configured feed"
+            git push
+          fi
