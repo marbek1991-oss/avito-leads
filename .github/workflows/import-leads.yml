@@ -16,6 +16,7 @@ jobs:
       - name: Import candidates from configured permitted source
         env:
           LEADS_FEED_URL: ${{ vars.LEADS_FEED_URL }}
+          GOOGLE_ALERTS_RSS_URL: ${{ vars.GOOGLE_ALERTS_RSS_URL }}
         run: python scripts/import_leads.py
       - name: Publish updated results if any
         run: |
