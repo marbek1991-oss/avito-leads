@@ -56,6 +56,10 @@ if url:
 rss_errors = []
 rss_sources_ok = 0
 rss_entries_total = 0
+rss_rejected_non_avito = 0
+rss_rejected_city_or_category = 0
+rss_rejected_niche = 0
+rss_entries_total = 0
 rss_direct_links = 0
 rss_rejected_other_city = 0
 rss_rejected_not_listing = 0
@@ -79,6 +83,7 @@ for rss_url in rss_urls[:100]:
                 params = urllib.parse.parse_qs(target.query)
                 link = params.get("url", params.get("q", [""]))[0]
             if not is_avito_link(link):
+                rss_rejected_non_avito += 1
                 continue
             rss_direct_links += 1
             title = html.unescape(re.sub(r"<[^>]*>", "", entry.findtext("{http://www.w3.org/2005/Atom}title") or "")).strip()
@@ -160,4 +165,4 @@ all_items = (new + list(previous.values()))[:300]
 OUT.write_text(json.dumps({"generated_at": today, "source_configured": True, "new_count": len(new),
                            "disclaimer": "Ссылки получены из внешнего источника или Google Alerts; открытость и актуальность объявлений на Авито не проверены.",
                            "rss_sources_ok": rss_sources_ok, "rss_sources_total": min(len(rss_urls), 100), "rss_errors": len(rss_errors), "rss_entries_total": rss_entries_total, "rss_direct_links": rss_direct_links, "rss_rejected_other_city": rss_rejected_other_city, "rss_rejected_not_listing": rss_rejected_not_listing, "rss_rejected_niche": rss_rejected_niche, "items": all_items}, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-print(f"Получено {len(new)} новых кандидатов. RSS прочитано: {rss_sources_ok}/{min(len(rss_urls), 100)}. Актуальность Авито не утверждается.")
+print(f"Получено {len(new)} новых кандидатов. RSS: {rss_sources_ok}/{min(len(rss_urls), 100)}, записей Google: {rss_entries_total}, отклонено: не Авито {rss_rejected_non_avito}, не объявление/город {rss_rejected_city_or_category}, не ниша {rss_rejected_niche}. Актуальность Авито не утверждается.")
