@@ -14,7 +14,13 @@ import html
 
 OUT = pathlib.Path("candidates.json")
 url = os.environ.get("LEADS_FEED_URL", "").strip()
-rss_url = os.environ.get("GOOGLE_ALERTS_RSS_URL", "").strip()
+# One or more RSS URLs separated by newlines, commas or semicolons.
+# Existing single-feed configuration remains supported.
+raw_rss = "\\n".join(filter(None, (
+    os.environ.get("GOOGLE_ALERTS_RSS_URL", ""),
+    os.environ.get("GOOGLE_ALERTS_RSS_URLS", "")
+)))
+rss_urls = list(dict.fromkeys(x.strip() for x in re.split(r"[\\n;,]+", raw_rss) if x.strip()))
 today = dt.datetime.now(dt.timezone.utc).isoformat()
 
 def is_avito_link(value):
@@ -24,7 +30,7 @@ def is_avito_link(value):
     except ValueError:
         return False
 
-if not url and not rss_url:
+if not url and not rss_urls:
     print("Источник не подключён: укажи LEADS_FEED_URL или GOOGLE_ALERTS_RSS_URL в GitHub Variables.")
     raise SystemExit(0)
 
@@ -47,38 +53,49 @@ if url:
         raise SystemExit("JSON-источник должен содержать массив items")
     items.extend(values)
 
-if rss_url:
-    parsed = urllib.parse.urlparse(rss_url)
-    if parsed.hostname not in ("www.google.com", "google.com", "www.google.ru", "google.ru") or not parsed.path.startswith("/alerts/feeds/"):
-        raise SystemExit("GOOGLE_ALERTS_RSS_URL должен быть адресом RSS из Google Alerts")
-    root = ET.fromstring(get_bytes(rss_url))
-    entries = root.findall("{http://www.w3.org/2005/Atom}entry")
-    for entry in entries:
-        link_node = entry.find("{http://www.w3.org/2005/Atom}link")
-        link = link_node.get("href", "") if link_node is not None else ""
-        target = urllib.parse.urlparse(link)
-        # Google Alerts usually links directly to the result. Do not follow third-party redirects.
-        if target.hostname in ("www.google.com", "google.com"):
-            params = urllib.parse.parse_qs(target.query)
-            link = params.get("url", params.get("q", [""]))[0]
-        if not is_avito_link(link):
-            continue
-        title = html.unescape(re.sub(r"<[^>]*>", "", entry.findtext("{http://www.w3.org/2005/Atom}title") or "")).strip()
-        slug = urllib.parse.urlparse(link).path.strip("/").split("/")
-        city = slug[0].replace("_", " ").title() if slug else ""
-        title_lower = title.lower()
-        niches = [
-            ("Модульные дома", ("модульн", "домокомплект")),
-            ("Строительство бань", ("баня", "бани", "бань")),
-            ("Бытовки / вагончики", ("бытовк", "вагончик", "блок контейнер")),
-            ("Стройматериалы", ("стройматериал", "кирпич", "газоблок")),
-            ("Заборы / ворота", ("забор", "ворот")),
-            ("Наружная реклама", ("вывеск", "наружн", "объёмные буквы"))
-        ]
-        niche = next((n for n, terms in niches if any(t in title_lower for t in terms)), "Другое")
-        items.append({"name": title[:200] or "Объявление из Google Alerts", "city": city or "Не определён", "niche": niche,
-                      "url": link, "issues": "", "recommend": "", "source": "Google Alerts RSS (поисковый индекс)",
-                      "verification": "Не проверено: найдено в Google, а не непосредственно на Авито"})
+rss_errors = []
+rss_sources_ok = 0
+for rss_url in rss_urls[:100]:
+    try:
+        parsed = urllib.parse.urlparse(rss_url)
+        if parsed.scheme != "https" or parsed.hostname not in ("www.google.com", "google.com", "www.google.ru", "google.ru") or not parsed.path.startswith("/alerts/feeds/"):
+            raise ValueError("Неверный адрес Google Alerts")
+        root = ET.fromstring(get_bytes(rss_url))
+        entries = root.findall("{http://www.w3.org/2005/Atom}entry")
+        rss_sources_ok += 1
+        for entry in entries:
+            link_node = entry.find("{http://www.w3.org/2005/Atom}link")
+            link = link_node.get("href", "") if link_node is not None else ""
+            target = urllib.parse.urlparse(link)
+            # Extract only explicit search-result URLs, never bypass site blocks.
+            if target.hostname in ("www.google.com", "google.com"):
+                params = urllib.parse.parse_qs(target.query)
+                link = params.get("url", params.get("q", [""]))[0]
+            if not is_avito_link(link):
+                continue
+            title = html.unescape(re.sub(r"<[^>]*>", "", entry.findtext("{http://www.w3.org/2005/Atom}title") or "")).strip()
+            slug = urllib.parse.urlparse(link).path.strip("/").split("/")
+            city = slug[0].replace("_", " ").title() if slug else ""
+            title_lower = title.lower()
+            niches = [
+                ("Модульные дома", ("модульн", "домокомплект")),
+                ("Строительство бань", ("баня", "бани", "бань")),
+                ("Бытовки / вагончики", ("бытовк", "вагончик", "блок контейнер")),
+                ("Стройматериалы", ("стройматериал", "кирпич", "газоблок")),
+                ("Заборы / ворота", ("забор", "ворот")),
+                ("Наружная реклама", ("вывеск", "наружн", "объёмные буквы"))
+            ]
+            niche = next((n for n, terms in niches if any(t in title_lower for t in terms)), "Другое")
+            items.append({"name": title[:200] or "Объявление из Google Alerts",
+                          "city": city or "Не определён", "niche": niche,
+                          "url": link, "issues": "", "recommend": "",
+                          "source": "Google Alerts RSS (поисковый индекс)",
+                          "verification": "Не проверено: найдено в Google, а не непосредственно на Авито"})
+    except (ValueError, OSError, ET.ParseError) as err:
+        rss_errors.append(str(err)[:140])
+        print("Ошибка чтения одной RSS-ленты: " + str(err)[:140])
+if rss_urls and rss_sources_ok == 0 and not url:
+    raise SystemExit("Не удалось прочитать ни одну RSS-ленту. Проверьте ссылки в GitHub Variables.")
 previous = {}
 if OUT.exists():
     try:
@@ -115,5 +132,5 @@ for x in items:
 all_items = (new + list(previous.values()))[:300]
 OUT.write_text(json.dumps({"generated_at": today, "source_configured": True, "new_count": len(new),
                            "disclaimer": "Ссылки получены из внешнего источника или Google Alerts; открытость и актуальность объявлений на Авито не проверены.",
-                           "items": all_items}, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-print(f"Получено {len(new)} новых кандидатов от настроенного источника. Актуальность Авито не утверждается.")
+                           "rss_sources_ok": rss_sources_ok, "rss_sources_total": min(len(rss_urls), 100), "rss_errors": len(rss_errors), "items": all_items}, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+print(f"Получено {len(new)} новых кандидатов. RSS прочитано: {rss_sources_ok}/{min(len(rss_urls), 100)}. Актуальность Авито не утверждается.")
