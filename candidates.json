@@ -1,15 +1,27 @@
 {
-  "generated_at": "2026-11-21T15:03:04.711948+00:00",
+  "generated_at": "2026-11-22T19:44:52.885975+00:00",
   "source_configured": true,
-  "new_count": 0,
+  "new_count": 1,
   "disclaimer": "Ссылки получены из внешнего источника или Google Alerts; открытость и актуальность объявлений на Авито не проверены.",
   "rss_sources_ok": 6,
   "rss_sources_total": 6,
   "rss_errors": 0,
-  "rss_entries_total": 0,
-  "rss_direct_links": 0,
+  "rss_entries_total": 1,
+  "rss_direct_links": 1,
   "rss_rejected_other_city": 0,
   "rss_rejected_not_listing": 0,
   "rss_rejected_niche": 0,
-  "items": []
+  "items": [
+    {
+      "url": "https://www.avito.ru/moskva/remont_i_stroitelstvo/sadovyy_dom_modulnyy_dom_8494950856",
+      "name": "Садовый дом / Модульный дом купить в Москве по низкой цене | Товары для дома и дачи | Авито",
+      "city": "Москва",
+      "niche": "Модульные дома",
+      "issues": "",
+      "recommend": "",
+      "verification": "Не проверено: найдено в Google, а не непосредственно на Авито",
+      "source": "Google Alerts RSS (поисковый индекс)",
+      "added_at": "2026-11-22T19:44:52.885975+00:00"
+    }
+  ]
 }
