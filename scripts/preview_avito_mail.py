@@ -16,7 +16,7 @@ import sys
 from urllib.parse import urlsplit
 
 LISTING = re.compile(r"_[0-9]{7,}/?$")
-URLS = re.compile(r"https://[^\\s<>\"']+", re.IGNORECASE)
+URLS = re.compile(r"https://[^\s<>\"']+", re.IGNORECASE)
 ALLOWED_SENDERS = ("avito.ru",)
 
 class Hrefs(HTMLParser):
