@@ -1,5 +1,7 @@
 name: Check Mail.ru Avito notifications (safe diagnostic)
 on:
+  schedule:
+    - cron: '30 13 * * *'
   workflow_dispatch:
 permissions:
   contents: read
