@@ -1,0 +1,19 @@
+name: Preview Avito email listing links (private)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Count links in Avito emails without publishing personal data
+        env:
+          MAILRU_EMAIL: ${{ vars.MAILRU_EMAIL }}
+          MAILRU_APP_PASSWORD: ${{ secrets.MAILRU_APP_PASSWORD }}
+        run: python scripts/preview_avito_mail.py
