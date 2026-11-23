@@ -1,0 +1,19 @@
+name: Check Mail.ru Avito notifications (safe diagnostic)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  mail-diagnostic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check IMAP and count potential notifications without reading messages
+        env:
+          MAILRU_EMAIL: ${{ vars.MAILRU_EMAIL }}
+          MAILRU_APP_PASSWORD: ${{ secrets.MAILRU_APP_PASSWORD }}
+        run: python scripts/check_mailru.py
