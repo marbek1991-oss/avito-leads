@@ -473,77 +473,162 @@ function exportCandidatePdf(candidate){
   const confirmed=typeof candidate.publicUrl==='string'&&/^https:\/\/(?:www\.)?avito\.ru\//.test(candidate.publicUrl)&&new RegExp('_'+candidate.itemId+'(?:[/?#]|$)').test(candidate.publicUrl);
   const findings=specificCardFindings(candidate);
   if(!findings.length)throw Error('Нет конкретных наблюдений для разбора');
-  // Client-facing report: concise, concrete and free of internal notes.
-  const visibleFindings=findings.filter(f=>f.title!=='Явных текстовых проблем по заданным критериям не обнаружено').slice(0,4);
-  const sections=[
-    ...visibleFindings.map((f,i)=>({
-      title:(i+1)+'. '+f.title,
-      items:[
-        'В объявлении: '+String(f.observation||'').replace(/^Из текста: /,'').replace(/^Найдено: /,'').trim(),
-        'Что предлагаю изменить: '+String(f.recommendation||'').replace(/\s*(?:Не добавлять неподтверждённые характеристики\.|Пока этап не подтверждён, готовое обещание добавлять нельзя\.|Если данных нет, не выдавать это за действующую акцию\.|не придумывать\.)/gi,'').trim()
-      ]
-    }))
-  ];
-  if(!sections.length){
-    sections.push({title:'Результат разбора',items:['В описании не обнаружено конкретных текстовых недостатков, которые можно подтвердить по доступным сведениям.']});
+  // Client-facing editorial report. Sources are the captured description and listing metadata.
+  const raw=String(candidate.auditDescription||'').replace(/\s+/g,' ').trim();
+  const names=String(candidate.name||'Объявление Авито');
+  const priority=findings.filter(f=>!/^Сильное преимущество/.test(f.title)&&!/^Явных текстовых проблем/.test(f.title));
+  const strengths=findings.filter(f=>/^Сильное преимущество/.test(f.title));
+  const size=(raw.match(/\b\d+(?:[.,]\d+)?\s*(?:м²|м2|кв\.?\s*м)\b/i)||[])[0];
+  const warranty=(raw.match(/гаранти[яюи][^.!?]{0,25}?\d+\s*(?:год(?:а)?|лет|месяц(?:ев|а)?)/i)||[])[0];
+  const payment=/не\s+бер[её]м\s+предоплат|оплат[аиы]\s+после\s+установк|без\s+предоплат/i.test(raw);
+  const category=/модульн|дом/.test(names.toLowerCase())?'Модульный дом':/бан[ьяи]/.test(names.toLowerCase())?'Баня':'Объект или услуга';
+  const improvedTitle=size?category+' под ключ · '+size: names.replace(/\s*\/\s*/g,' · ');
+  const cleanedFacts=[
+    size?'Площадь, указанная в описании: '+size+'.':null,
+    payment?'В объявлении заявлена оплата после установки / без предоплаты.':null,
+    warranty?'В тексте указана гарантия: '+warranty+'.':null,
+    candidate.auditPrice?'Цена на момент просмотра: '+candidate.auditPrice+'.':null
+  ].filter(Boolean);
+  const rewritten=[
+    improvedTitle,
+    '',
+    ...(cleanedFacts.length?cleanedFacts:['Характеристики и комплектацию уточните у продавца.']),
+    '',
+    'КОМПЛЕКТАЦИЯ И ХАРАКТЕРИСТИКИ',
+    'Уточните точный состав поставки, материалы, утепление и отделку для выбранной модели.',
+    '',
+    'ДОСТАВКА И УСТАНОВКА',
+    'Попросите продавца подтвердить срок изготовления, доставки и монтажа — это разные этапы.',
+    '',
+    'УСЛОВИЯ ЗАКАЗА',
+    payment?'Уточните, как оформляется оплата после установки и предусмотрен ли договор.':'Попросите уточнить порядок оплаты и условия договора.',
+    warranty?'Уточните, на какие работы распространяется заявленная гарантия.':'Попросите уточнить гарантийные обязательства.',
+    '',
+    'АКЦИЯ',
+    'Указывать процент скидки и дату завершения только после подтверждения конкретных условий.',
+    '',
+    'Чтобы подобрать вариант, напишите продавцу в чат Авито.'
+  ].join('\n');
+  const W=1240,H=1754,L=90,R=1150,TOP=150,BOTTOM=1585,INNER=R-L;
+  const pages=[];let canvas,ctx,y,pageNumber=0;
+  const P={navy:'#13243a',blue:'#1766bf',cyan:'#e9f4fc',ink:'#26364a',muted:'#62758d',light:'#f3f6fa',line:'#dce6ef',green:'#178477',amber:'#a35c16'};
+  function newPage(kicker='АУДИТ ОБЪЯВЛЕНИЯ'){
+    canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;
+    ctx=canvas.getContext('2d');if(!ctx)throw Error('Не удалось создать холст PDF');
+    ctx.fillStyle='#ffffff';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle=P.navy;ctx.fillRect(0,0,W,26);
+    ctx.fillStyle=P.blue;ctx.fillRect(0,26,300,7);
+    ctx.fillStyle=P.muted;ctx.font='bold 22px Arial, sans-serif';ctx.fillText(kicker,L,83);
+    ctx.fillStyle=P.line;ctx.fillRect(L,1668,INNER,2);
+    ctx.fillStyle=P.muted;ctx.font='20px Arial, sans-serif';
+    ctx.fillText('РАЗБОР ПО ДОСТУПНЫМ ДАННЫМ ОБЪЯВЛЕНИЯ',L,1713);
+    ctx.fillText('AVITO LEADS  /  '+(++pageNumber),R-207,1713);
+    y=TOP;pages.push(canvas);
   }
-  // Self-contained A4 JPEG-backed PDF. Text drawn by the browser's native font engine,
-  // so Russian characters render without external libraries or popup windows.
-  const W=1240,H=1754,L=92,R=1150,TOP=135,BOTTOM=1640;
-  const pages=[];let canvas,ctx,y;
-  function newPage(){
-   canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;
-   ctx=canvas.getContext('2d');if(!ctx)throw Error('Нет доступа к Canvas');
-   ctx.fillStyle='#ffffff';ctx.fillRect(0,0,W,H);
-   ctx.fillStyle='#155caa';ctx.fillRect(0,0,W,21);
-   ctx.fillStyle='#536b86';ctx.font='24px Arial, sans-serif';
-   ctx.fillText('РАЗБОР ОБЪЯВЛЕНИЯ',L,82);
-   ctx.fillStyle='#d8e3ef';ctx.fillRect(L,1680,R-L,2);
-   ctx.fillStyle='#64748b';ctx.font='20px Arial, sans-serif';
-   ctx.fillText('Рекомендации по оформлению объявления',L,1720);
-   y=TOP;pages.push(canvas);
-  }
-  function available(h){if(y+h>BOTTOM)newPage()}
-  function lines(value,font,maxWidth){
-   ctx.font=font;
-   const text=String(value??'').replace(/\s+/g,' ').trim();
-   const words=text.split(' '),res=[];let line='';
-   for(const word of words){
-    if(!word)continue;
-    const candidate=line?line+' '+word:word;
-    if(ctx.measureText(candidate).width<=maxWidth){line=candidate;continue}
-    if(line){res.push(line);line=''}
-    if(ctx.measureText(word).width<=maxWidth){line=word;continue}
-    let part='';
-    for(const ch of word){
-     if(ctx.measureText(part+ch).width>maxWidth&&part){res.push(part);part=''}
-     part+=ch;
+  function font(size=27,bold=false){return (bold?'bold ':'')+size+'px Arial, sans-serif'}
+  function wrap(value,size=27,max=INNER,bold=false){
+    ctx.font=font(size,bold);
+    const txt=String(value??'').replace(/\s+/g,' ').trim();
+    if(!txt)return [];
+    const rows=[];let line='';
+    for(const word of txt.split(' ')){
+      const potential=line?line+' '+word:word;
+      if(ctx.measureText(potential).width<=max){line=potential;continue}
+      if(line){rows.push(line);line=''}
+      if(ctx.measureText(word).width<=max){line=word;continue}
+      let part='';
+      for(const ch of word){
+        if(ctx.measureText(part+ch).width>max&&part){rows.push(part);part=''}
+        part+=ch;
+      }line=part;
     }
-    line=part;
-   }
-   if(line)res.push(line);
-   return res.length?res:[''];
+    if(line)rows.push(line);
+    return rows;
   }
-  function paragraph(value,{size=28,bold=false,color='#23374f',indent=0,margin=14}={}){
-   const font=(bold?'bold ':'')+size+'px Arial, sans-serif';
-   const lh=Math.round(size*1.46),rows=lines(value,font,R-L-indent);
-   for(const row of rows){
-    available(lh);
-    ctx.fillStyle=color;ctx.font=font;ctx.fillText(row,L+indent,y);y+=lh;
-   }
-   available(margin);y+=margin;
+  function ensure(h=60){if(y+h>BOTTOM)newPage('ПРОДОЛЖЕНИЕ АУДИТА')}
+  function para(value,{size=27,bold=false,color=P.ink,gap=16,indent=0}={}){
+    const lineH=Math.round(size*1.42);
+    for(const str of wrap(value,size,INNER-indent,bold)){
+      ensure(lineH+5);
+      ctx.fillStyle=color;ctx.font=font(size,bold);ctx.fillText(str,L+indent,y);y+=lineH;
+    }
+    y+=gap;
   }
-  function heading(value){
-   available(78);y+=19;
-   paragraph(value,{size:34,bold:true,color:'#175ea6',margin:14});
+  function head(text,{size=39,color=P.navy,gap=17}={}){
+    ensure(size*2.2);para(text,{size,bold:true,color,gap});
   }
-  newPage();
-  paragraph(candidate.name||'Объявление',{size:43,bold:true,color:'#132b4c',margin:24});
-  if(confirmed)paragraph(candidate.publicUrl,{size:19,color:'#155caa',margin:19});
-  for(const sec of sections){
-   heading(sec.title);
-   for(const item of sec.items||[]){paragraph(item,{indent:0,size:27,margin:16})}
+  function smallLabel(text,color=P.blue){
+    ensure(54);ctx.fillStyle=color;ctx.font='bold 22px Arial, sans-serif';ctx.fillText(String(text).toUpperCase(),L,y);y+=42;
   }
+  function rule(){ensure(28);ctx.fillStyle=P.line;ctx.fillRect(L,y,INNER,2);y+=29}
+  function block(text,{accent=P.blue,background=P.light,size=25}={}){
+    const lineH=Math.round(size*1.42),rows=wrap(text,size,INNER-76);
+    const height=rows.length*lineH+42;
+    ensure(Math.min(height,BOTTOM-TOP));
+    ctx.fillStyle=background;ctx.fillRect(L,y-25,INNER,height);
+    ctx.fillStyle=accent;ctx.fillRect(L,y-25,6,height);
+    ctx.fillStyle=P.ink;ctx.font=font(size);
+    for(const str of rows){ctx.fillText(str,L+27,y+7);y+=lineH}
+    y+=47;
+  }
+  function field(label,text,accent=P.blue){
+    ensure(70);smallLabel(label,accent);para(text,{size:26,gap:12});
+  }
+  function sectionTitle(index,title){rule();smallLabel('НАБЛЮДЕНИЕ '+index);head(title,{size:33})}
+  // Page 1: decisive and visual executive summary.
+  newPage('ЭКСПРЕСС-АУДИТ  /  ПРЕДВАРИТЕЛЬНО');
+  smallLabel('АНАЛИЗ ТЕКСТА ОБЪЯВЛЕНИЯ');
+  head(names,{size:50,gap:27});
+  para('ID '+candidate.itemId+'  •  '+new Date().toLocaleDateString('ru-RU')+(candidate.city&&candidate.city!=='Не определён'?'  •  '+candidate.city:''),{size:23,color:P.muted,gap:20});
+  if(confirmed)para(candidate.publicUrl,{size:20,color:P.blue,gap:26});
+  block('ГЛАВНЫЙ ВЫВОД. В тексте найдены '+priority.length+' потенциальных зон для улучшения. Сначала стоит уточнить коммерческие условия и показать покупателю характеристики, затем усиливать рекламную часть.',{background:P.cyan,size:29});
+  smallLabel('ЧТО УЖЕ ХОРОШО',P.green);
+  if(strengths.length){
+    for(const f of strengths.slice(0,3))para('✓ '+f.title.replace(/^Сильное преимущество:\s*/,'').replace(/^./,c=>c.toUpperCase())+'. '+f.impact,{size:26,gap:13});
+  }else{
+    para('Полезные особенности предложения следует выделить после подтверждения фактических условий продажи.',{size:26});
+  }
+  rule();smallLabel('ПРИОРИТЕТЫ ПРАВОК');
+  for(let i=0;i<Math.min(priority.length,5);i++){
+    para(String(i+1).padStart(2,'0')+'  '+priority[i].title,{size:28,bold:i<2,color:i<2?P.navy:P.ink,gap:12});
+  }
+  // Dedicated analysis pages: show source, rationale and implementable change.
+  newPage('КОНКРЕТНЫЕ ЗАМЕЧАНИЯ  /  ПО ТЕКСТУ');
+  for(let i=0;i<priority.length;i++){
+    const f=priority[i];
+    sectionTitle(i+1,f.title);
+    field('ФРАГМЕНТ / НАБЛЮДЕНИЕ',f.observation);
+    field('ПОЧЕМУ ЭТО ВЛИЯЕТ НА ВОСПРИЯТИЕ',f.impact,P.amber);
+    block('РЕКОМЕНДАЦИЯ. '+f.recommendation,{accent:P.green,background:'#eff8f5',size:25});
+  }
+  if(strengths.length){
+    head('Сильные стороны, которые стоит сохранить',{size:35});
+    for(const f of strengths){
+      rule();smallLabel(f.title,P.green);
+      para(f.observation,{size:25,gap:12});
+      block(f.recommendation,{accent:P.green,background:'#eff8f5',size:24});
+    }
+  }
+  // Separate working draft (not silently presenting placeholders as seller facts).
+  newPage('НОВАЯ СТРУКТУРА ОБЪЯВЛЕНИЯ');
+  head('Как переписать объявление',{size:46});
+  block('Ниже — рабочий пример на основе известных сведений. Точные материалы, комплектацию, цены и срок выполнения нужно подтвердить перед публикацией.',{accent:P.amber,background:'#fff7e9',size:25});
+  head('Вариант заголовка',{size:33});
+  para(improvedTitle,{size:31,bold:true,color:P.blue,gap:26});
+  rule();head('Проект описания',{size:33});
+  for(const part of rewritten.split('\n')){
+    if(!part.trim()){y+=14;continue}
+    const isHeader=/^(КОМПЛЕКТАЦИЯ|ДОСТАВКА|УСЛОВИЯ|АКЦИЯ)/.test(part);
+    para(part,{size:isHeader?27:25,bold:isHeader,color:isHeader?P.blue:P.ink,gap:9});
+  }
+  rule();head('План внедрения',{size:34});
+  for(const line of [
+   '1. Согласовать фактическую комплектацию, площадь и цену конкретной модели.',
+   '2. Разделить сроки изготовления, доставки и монтажа; уточнить условия оплаты.',
+   '3. Уточнить гарантию, сроки и реальные условия скидки.',
+   '4. Обновить заголовок и первые строки описания.',
+   '5. Проверить изображения и ценовое предложение отдельно — они не оценивались автоматически.'
+  ])para(line,{size:25,gap:12});
   const encoder=new TextEncoder(),chunks=[];let cursor=0;
   function put(data){
    const bytes=typeof data==='string'?encoder.encode(data):data;
