@@ -4,7 +4,7 @@
 <section class="tab active" id="tab-leads"><div class="panel"><div class="formgrid"><label>Поиск по базе<input id="filterText" placeholder="Компания, ниша, город..."></label><label>Статус<select id="filterStatus"><option value="">Все статусы</option><option>Новый</option><option>Проверен</option><option>Написал</option><option>Ответил</option><option>Переговоры</option><option>Клиент</option><option>Отказ</option></select></label></div><p class="hint">Кандидаты хранятся только в этом браузере. Для переноса на другой телефон используй экспорт и импорт.</p></div><div id="leadList"></div></section>
 <section class="tab" id="tab-add"><div class="panel"><h2 id="formTitle">Новый кандидат</h2><form id="leadForm"><input id="editingId" type="hidden"><div class="formgrid"><label>Компания / название*<input id="name" required placeholder="Название из объявления"></label><label>Город*<input id="city" required placeholder="Казань"></label><label>Ниша<select id="niche"><option>Модульные дома</option><option>Строительство бань</option><option>Бытовки / вагончики</option><option>Стройматериалы</option><option>Заборы / ворота</option><option>Наружная реклама</option><option>Другое</option></select></label><label>Статус<select id="status"><option>Новый</option><option>Проверен</option><option>Написал</option><option>Ответил</option><option>Переговоры</option><option>Клиент</option><option>Отказ</option></select></label><label class="full">Прямая ссылка Авито*<input type="url" id="url" required placeholder="https://www.avito.ru/..." pattern="https://.*"></label><label>Проверено когда?<input id="verified" type="date"></label><label>Приоритет<select id="priority"><option>Средний</option><option>Высокий</option><option>Низкий</option></select></label><label class="full">Реально замеченные недостатки<textarea id="issues" placeholder="Например: в заголовке не указана комплектация. Не придумывайте отсутствующие факты."></textarea></label><label class="full">Идеи улучшения<textarea id="recommend" placeholder="Что именно стоит поменять"></textarea></label><label class="full">Заметки<textarea id="notes" placeholder="Когда написать, ответ, контакт (по желанию)"></textarea></label></div><div class="buttonbar"><button class="primary" type="submit">Сохранить кандидата</button><button type="button" id="resetForm">Очистить форму</button></div></form></div></section>
 <section class="tab" id="tab-search"><div class="panel"><h2>Поиск потенциальных клиентов</h2><div class="warning"><b>Прямой поиск на Авито недоступен.</b> Бесплатный вариант — Google Alerts RSS с проиндексированными ссылками (подключение ниже). Актуальность объявлений не подтверждена. Кнопки ниже открывают обычную поисковую выдачу для ручной проверки.</div><div class="formgrid" style="margin-top:17px"><label>Город<select id="searchCity"><option>Москва</option><option>Санкт-Петербург</option><option>Новосибирск</option><option>Екатеринбург</option><option>Казань</option><option>Краснодар</option><option>Нижний Новгород</option><option>Челябинск</option><option>Самара</option><option>Уфа</option><option>Ростов-на-Дону</option><option>Пермь</option><option>Воронеж</option><option>Волгоград</option><option>Омск</option></select></label><label>Ниша<select id="searchNiche"><option>модульные дома</option><option>строительство бань</option><option>бытовки вагончики</option><option>строительные материалы</option><option>заборы ворота</option><option>наружная реклама</option></select></label></div><div class="buttonbar"><button class="primary" id="openSearch">Найти объявления в поиске</button><button id="openAvito">Открыть Авито</button></div><p class="hint">Режим поиска: обычная выдача поисковика по сайту avito.ru, без автоматического сбора объявлений и проверки актуальности.</p></div><div class="panel"><h2>Результаты ежедневного задания</h2><p>Если настроен разрешённый источник данных, GitHub Actions сохраняет новые ссылки в <code>candidates.json</code>. Можно забрать их в свою базу одним нажатием. <b>Импорт не подтверждает актуальность объявления.</b></p><div class="buttonbar"><button class="primary" id="syncCandidates">Загрузить новые кандидаты</button></div><p class="hint" id="syncStatus">Источник ещё не проверен</p><div class="warning" style="margin-top:12px" id="feedDiagnostics" aria-live="polite">Здесь появится дата проверки, число записей в RSS и причины отсева.</div><div id="searchDiagnostics" class="warning" style="margin-top:12px;display:none"></div><div id="feedDiagnostics" class="warning" style="margin-top:12px;display:none"></div></div><div class="panel"><h2>Несколько бесплатных Google Alerts RSS</h2><p>Ежедневное задание читает несколько RSS-лент из переменной <code>GOOGLE_ALERTS_RSS_URL</code>, удаляет повторы и добавляет до 15 новых ссылок за запуск. <b>Важно:</b> Google Alerts не гарантирует новых клиентов и не проверяет актуальность объявлений.</p><p><b>Рекомендуемые запросы для проверки:</b> <code>site:avito.ru "модульный дом"</code>, <code>site:avito.ru "баня под ключ"</code>, <code>site:avito.ru "бытовка"</code>, <code>site:avito.ru "газоблок"</code>, <code>site:avito.ru "откатные ворота"</code>, <code>site:avito.ru "световые вывески"</code>. Они могут дать более релевантную выдачу, но не гарантируют новых объявлений.</p><p>Для улучшения охвата создавай отдельные оповещения с более конкретными формулировками (по желанию меняй существующие, но не удаляй RSS-ссылки без обновления GitHub):</p><ol><li><code>site:avito.ru "модульные дома"</code></li><li><code>site:avito.ru "строительство бань"</code></li><li><code>site:avito.ru "бытовки"</code></li><li><code>site:avito.ru "строительные материалы"</code></li><li><code>site:avito.ru "заборы ворота"</code></li><li><code>site:avito.ru "наружная реклама"</code></li></ol><p>При необходимости добавь названия интересующих городов в запрос. Используй <a href="https://www.google.com/alerts" target="_blank" rel="noopener">Google Alerts</a> с доставкой «RSS-фид». В <a href="https://github.com/marbek1991-oss/avito-leads/settings/variables/actions" target="_blank" rel="noopener">GitHub Variables</a> открой <code>GOOGLE_ALERTS_RSS_URL</code> и вставь <b>URL всех RSS-лент, каждый с новой строки</b> (не XML-содержимое). Старую ссылку не удаляй, добавь новые ниже. Затем запусти <a href="https://github.com/marbek1991-oss/avito-leads/actions/workflows/import-leads.yml" target="_blank" rel="noopener">Run workflow</a> и нажми «Загрузить новые кандидаты».</p><p class="hint">Узкие формулировки вроде «строительные материалы» могут давать мало находок. Попробуй отдельные запросы: <code>site:avito.ru "газоблоки" Казань</code>, <code>site:avito.ru "баня под ключ" Уфа</code>, <code>site:avito.ru "откатные ворота" Новосибирск</code>, <code>site:avito.ru "вывески" Екатеринбург</code>. Это примеры запросов, а не найденные объявления. Попробуй также новые оповещения Google Alerts с более конкретными запросами: site:avito.ru "модульный дом"; site:avito.ru "баня под ключ"; site:avito.ru "бытовка"; site:avito.ru "газоблок"; site:avito.ru "откатные ворота"; site:avito.ru "изготовление вывесок". Не удаляй существующие оповещения без необходимости. Поиск покрывает только индекс Google, не все объявления Авито. География определяется приблизительно по адресу ссылки. Недостатки объявления не генерируются без проверки. Данные клиентов хранятся в этом браузере, резервная копия — вкладка «Данные».</p></div></section>
-<section class="tab" id="tab-mail"><div class="panel"><h2>Кандидаты из рассылки Авито</h2><p>Кандидаты из уведомлений Mail.ru загружаются автоматически при открытии приложения. Публикуются только названия, тематики и ID объявлений (без личных ссылок и токенов). Проверку актуальности выполняй на Авито.</p><div class="buttonbar"><button class="primary" id="syncMailCandidates">Обновить кандидатов</button><button id="importMailCandidates">Загрузить JSON вручную</button><button id="importMailLinks">Добавить ссылки из письма</button><a class="btn" href="https://github.com/marbek1991-oss/avito-leads/actions/workflows/export-avito-mail.yml" target="_blank" rel="noopener noreferrer">Получить файл в GitHub</a></div><input class="hidden" type="file" accept=".json,application/json" id="mailCandidatesInput"><input class="hidden" type="file" accept=".eml,.html,.htm,.txt,message/rfc822,text/html,text/plain" multiple id="mailLinksInput"><p class="hint">Чтобы открыть объявления одним нажатием, сохрани письмо «Новые объявления» из Mail.ru как .eml или HTML и загрузи его кнопкой «Добавить ссылки из письма». Исходные ссылки сохраняются только в этом браузере, не отправляются в GitHub. Не загружай чужие письма.</p><p class="hint" id="mailImportStatus">Автоматическая синхронизация запустится при открытии приложения. Первую выгрузку можно запустить кнопкой в GitHub.</p></div><div id="mailCandidatesList"></div></section>
+<section class="tab" id="tab-mail"><div class="panel"><h2>Кандидаты из рассылки Авито</h2><p>Кандидаты из уведомлений Mail.ru загружаются автоматически при открытии приложения. Публикуются только названия, тематики и ID объявлений (без личных ссылок и токенов). Проверку актуальности выполняй на Авито.</p><div class="buttonbar"><button class="primary" id="syncMailCandidates">Обновить кандидатов</button><button id="importMailCandidates">Загрузить JSON вручную</button><button id="importMailLinks">Добавить ссылки из письма</button><a class="btn" href="https://github.com/marbek1991-oss/avito-leads/actions/workflows/export-avito-mail.yml" target="_blank" rel="noopener noreferrer">Получить файл в GitHub</a></div><input class="hidden" type="file" accept=".json,application/json" id="mailCandidatesInput"><input class="hidden" type="file" accept=".eml,.html,.htm,.txt,message/rfc822,text/html,text/plain" multiple id="mailLinksInput"><p class="hint">Чтобы открыть объявления одним нажатием, сохрани письмо «Новые объявления» из Mail.ru как .eml или HTML и загрузи его кнопкой «Добавить ссылки из письма». Исходные ссылки сохраняются только в этом браузере, не отправляются в GitHub. Не загружай чужие письма.</p><p class="hint" id="mailImportStatus">Автоматическая синхронизация запустится при открытии приложения. Первую выгрузку можно запустить кнопкой в GitHub.</p></div><div class="panel"><h3>Автоматическое открытие объявлений</h3><p>Один раз создай ключ в приложении, скопируй его в секрет GitHub <code>AVITO_LINKS_KEY</code> и сохрани тот же ключ в этом браузере. После этого ссылки из почты будут автоматически зашифровываться в GitHub и открываться у тебя по кнопке. Никому не отправляй ключ.</p><div class="formgrid"><label class="full">Ключ шифрования (только на этом устройстве)<input type="password" id="linksKeyInput" autocomplete="off" placeholder="Нажми «Создать ключ» или вставь сохранённый ключ"></label></div><div class="buttonbar"><button id="generateLinksKey">Создать ключ</button><button id="copyLinksKey">Копировать ключ</button><button class="primary" id="saveLinksKey">Сохранить в браузере</button><a class="btn" target="_blank" rel="noopener noreferrer" href="https://github.com/marbek1991-oss/avito-leads/settings/secrets/actions">Секреты GitHub</a></div><p class="hint" id="linksKeyStatus">Ключ хранится локально в браузере. На другом устройстве его потребуется ввести снова. Данные GitHub Pages публичны, но ссылки в них зашифрованы AES-256-GCM.</p></div><div id="mailCandidatesList"></div></section>
 <section class="tab" id="tab-data"><div class="panel"><h2>Резервная копия и перенос</h2><p>Финансовые и клиентские сведения не загружаются в GitHub. Данные этой версии находятся в хранилище браузера конкретного устройства и могут исчезнуть при его очистке.</p><div class="buttonbar"><button class="primary" id="exportJson">Скачать резервную копию JSON</button><button id="exportCsv">Экспорт CSV для Excel</button><button id="importButton">Импорт JSON / CSV</button></div><input class="hidden" type="file" accept=".json,.csv,application/json,text/csv" id="fileInput"><hr class="divider"><h3>Установка на телефон</h3><p>Опубликуй эти файлы в <b>отдельном</b> репозитории GitHub Pages, чтобы не заменить приложение «Мои финансы». В Safari: «Поделиться» → «На экран Домой». В Chrome на Android: меню ⋮ → «Добавить на главный экран».</p><div class="buttonbar"><button id="clearAll" style="color:#a32128;background:#fff0f1">Удалить все записи</button></div></div></section><p class="foot">Авито Лиды · личный менеджер кандидатов · без подключения к API Авито</p></main>
 <dialog id="messageDialog"><h2>Сообщение для бесплатного разбора</h2><p class="muted">Можно отредактировать перед отправкой. Сообщение никому не отправляется автоматически.</p><textarea id="messageText" style="min-height:170px"></textarea><div class="buttonbar"><button class="primary" id="copyMessage">Скопировать сообщение</button><button id="closeDialog">Закрыть</button></div></dialog>
 <script>
@@ -81,6 +81,49 @@ $('mailLinksInput').onchange=async e=>{
 };
 
 
+
+const LINKS_KEY_STORAGE='avito_links_aes256_key_v1';
+function linksKey(){
+ return localStorage.getItem(LINKS_KEY_STORAGE)||'';
+}
+function base64bytes(value){
+ const b=atob(value);return Uint8Array.from(b,c=>c.charCodeAt(0));
+}
+function validEncryptionKey(value){
+ try{return base64bytes(value).length===32 && /^[A-Za-z0-9+/]+={0,2}$/.test(value)}catch{return false}
+}
+async function decryptAvitoLink(cipherText,id,keyString){
+ if(!cipherText||!validEncryptionKey(keyString))return '';
+ try{
+  const bytes=base64bytes(cipherText);
+  if(bytes.length<29)return '';
+  const key=await crypto.subtle.importKey('raw',base64bytes(keyString),'AES-GCM',false,['decrypt']);
+  const content=await crypto.subtle.decrypt({name:'AES-GCM',iv:bytes.slice(0,12),additionalData:new TextEncoder().encode(id),tagLength:128},key,bytes.slice(12));
+  const link=new TextDecoder().decode(content);
+  return validDigestLink(link,id)?link:'';
+ }catch{return ''}
+}
+$('linksKeyInput').value=linksKey();
+$('linksKeyStatus').textContent=linksKey()?'Ключ сохранён на этом устройстве. Добавь тот же ключ в GitHub Secret AVITO_LINKS_KEY, затем запусти экспорт.':'Ключ ещё не настроен. Создай и сохрани его здесь, затем скопируй в GitHub Secret AVITO_LINKS_KEY.';
+$('generateLinksKey').onclick=()=>{
+ const bytes=crypto.getRandomValues(new Uint8Array(32));
+ $('linksKeyInput').value=btoa(String.fromCharCode(...bytes));
+ $('linksKeyStatus').textContent='Ключ создан. Скопируй его в GitHub Secret AVITO_LINKS_KEY, затем нажми «Сохранить в браузере».';
+};
+$('copyLinksKey').onclick=async()=>{
+ const v=$('linksKeyInput').value.trim();
+ if(!validEncryptionKey(v)){alert('Сначала создай или вставь корректный ключ.');return}
+ try{await navigator.clipboard.writeText(v);$('linksKeyStatus').textContent='Ключ скопирован. Вставь его в GitHub Secret AVITO_LINKS_KEY. Никому не отправляй.'}
+ catch{const i=$('linksKeyInput');i.type='text';i.select();alert('Скопируй выделенный ключ, затем скрой его.')}
+};
+$('saveLinksKey').onclick=async()=>{
+ const v=$('linksKeyInput').value.trim();
+ if(!validEncryptionKey(v)){alert('Нужен ключ из 32 случайных байтов (Base64).');return}
+ localStorage.setItem(LINKS_KEY_STORAGE,v);
+ $('linksKeyStatus').textContent='Ключ сохранён только в этом браузере. Убедись, что он также сохранён в GitHub Secret AVITO_LINKS_KEY.';
+ await syncMailCandidates();
+};
+
 async function syncMailCandidates(){
  const status=$('mailImportStatus');
  status.textContent='Синхронизирую кандидатов из почты…';
@@ -90,16 +133,24 @@ async function syncMailCandidates(){
   const feed=await response.json();
   if(feed.format!=='avito-mail-candidates-v1'||!Array.isArray(feed.items))throw Error('Неверный формат списка');
   const map=new Map(mailCandidates.map(x=>[x.itemId,x]));
-  let added=0;
+  let added=0,unlocked=0;
+  const key=linksKey();
   for(const item of feed.items.slice(0,500)){
    const id=String(item.itemId||'').trim();
-   if(!/^[0-9]{7,15}$/.test(id)||map.has(id))continue;
-   const entry={itemId:id,name:String(item.name||'Объявление Авито').slice(0,200),city:String(item.city||'Не определён').slice(0,100),niche:String(item.niche||'Другое').slice(0,100)};
-   mailCandidates.push(entry);map.set(id,entry);added++;
+   if(!/^[0-9]{7,15}$/.test(id))continue;
+   let entry=map.get(id);
+   if(!entry){
+    entry={itemId:id,name:String(item.name||'Объявление Авито').slice(0,200),city:String(item.city||'Не определён').slice(0,100),niche:String(item.niche||'Другое').slice(0,100)};
+    mailCandidates.push(entry);map.set(id,entry);added++;
+   }
+   if(typeof item.linkCipher==='string' && key){
+    const plain=await decryptAvitoLink(item.linkCipher,id,key);
+    if(plain && entry.trackingUrl!==plain){entry.trackingUrl=plain;unlocked++}
+   }
   }
   saveMailCandidates();renderMailCandidates();
   const date=feed.created_at?new Date(feed.created_at).toLocaleString('ru-RU'):'дата неизвестна';
-  status.textContent='Синхронизация: '+date+' · Всего в выгрузке: '+feed.items.length+' · Добавлено новых: '+added+' · В твоём списке: '+mailCandidates.length+'.';
+  status.textContent='Синхронизация: '+date+' · Объявлений: '+feed.items.length+' · Новых: '+added+' · Ссылок открыто: '+unlocked+' · В списке: '+mailCandidates.length+'.'+(!key?' Для автоматических ссылок сохрани ключ в настройках ниже.':'');
  }catch(e){status.textContent='Не удалось синхронизировать: '+e.message}
 }
 $('syncMailCandidates').onclick=syncMailCandidates;
