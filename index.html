@@ -310,45 +310,131 @@ $('runCardAudit').onclick=()=>{
 };
 
 function exportCandidatePdf(candidate){
- const assessment=analyzeMailCandidate(candidate);
- const evidence=evidenceAudit(candidate);
- const known=!!String(candidate.auditDescription||'').trim();
- const safePublic=typeof candidate.publicUrl==='string'&&/^https:\/\/(?:www\.)?avito\.ru\//.test(candidate.publicUrl)&&new RegExp('_'+candidate.itemId+'(?:[/?#]|$)').test(candidate.publicUrl);
- // Never disclose token-bearing email digest links in client-facing PDFs.
- const source=safePublic?candidate.publicUrl:'Ссылка на карточку не подтверждена';
- const section=(title,arr)=>arr.length?'<section><h2>'+title+'</h2><ul>'+arr.map(v=>'<li>'+esc(v)+'</li>').join('')+'</ul></section>':'';
- const notes=known?[
-  'Описание получено из открытой карточки или введено пользователем; оценка относится только к доступному тексту.',
-  'Фотографии не оценивались визуально. Их количество учитывается лишь при наличии данных.',
-  'Перед отправкой разбора клиенту проверьте актуальность объявления и выводы.'
- ]:[
-  'Доступны только заголовок и тематика из уведомления Авито.',
-  'Описание, качество фотографий, цена и актуальность объявления не проверены.',
-  'Это предварительный план проверки, а не заключение о недостатках объявления.'
- ];
- const tips=[
-  'Проверить, раскрывает ли заголовок ключевую услугу и отличие предложения.',
-  'Проверить, понятны ли состав услуги, комплектация, стоимость и сроки.',
-  'Посмотреть, помогают ли фотографии оценить результат, масштаб и качество работы.',
-  'При необходимости добавить ответы на частые вопросы покупателей и условия связи.'
- ];
- const date=new Date().toLocaleDateString('ru-RU');
- const markup='<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>Разбор Авито — '+esc(candidate.name||candidate.itemId)+'</title><style>'+
- '@page{size:A4;margin:17mm}*{box-sizing:border-box}body{margin:0;font:11pt/1.55 Arial,Helvetica,sans-serif;color:#182d49}h1{font-size:23pt;line-height:1.17;margin:12px 0 8px}h2{font-size:13pt;color:#165ca9;margin:0 0 8px}section{margin:24px 0;break-inside:avoid}p{margin:8px 0}ul{padding-left:22px;margin:8px 0}li{margin:6px 0}header{border-bottom:3px solid #1971c9;padding-bottom:19px}.eyebrow{font-weight:700;color:#1764ae;font-size:9pt;letter-spacing:.13em}.small{font-size:9pt;color:#607187}.info{margin-top:18px;padding:12px 15px;background:#f0f5fc;border-radius:10px;overflow-wrap:anywhere}.tag{display:inline-block;color:#175da6;font-size:10pt;font-weight:700}.note{border-left:3px solid #dba84a;padding:9px 14px;background:#fff8e9}.footer{margin-top:30px;padding-top:12px;border-top:1px solid #dae4f0;color:#65758c;font-size:9pt}a{color:#0b60b0;overflow-wrap:anywhere}'+
- '</style></head><body><header><div class="eyebrow">АВИТО ЛИДЫ · БЕСПЛАТНЫЙ РАЗБОР</div><h1>'+esc(candidate.name||'Объявление Авито')+'</h1><div class="tag">'+esc(assessment.tier)+'</div><p class="small">Подготовлено: '+date+' · ID объявления: '+esc(candidate.itemId)+' · Ниша: '+esc(candidate.niche||'Не указана')+'</p></header>'+
- '<div class="info"><b>Источник:</b> '+(safePublic?'<a href="'+esc(source)+'">'+esc(source)+'</a>':esc(source))+'<br><b>Город:</b> '+esc(candidate.city||'Не определён')+'<br><b>Статус:</b> '+(known?'Предварительный аудит по тексту карточки':'Предварительный разбор по заголовку')+'</div>'+
- '<section><h2>Что удалось установить</h2><p>'+(known?'В распоряжении есть текст описания карточки. Ниже перечислены наблюдения, которые можно сделать по нему.':'Из уведомления известно название объявления и его предполагаемая ниша. Полное содержимое карточки пока недоступно.')+'</p></section>'+
- section('Предварительные признаки',assessment.reasons)+
- (known?section('Возможные точки улучшения по тексту',evidence.issues):'')+
- (known?section('Что присутствует в описании',evidence.strengths):'')+
- section('Рекомендации для проверки и улучшения',tips)+
- '<section class="note"><h2>Границы разбора</h2><ul>'+notes.map(v=>'<li>'+esc(v)+'</li>').join('')+'</ul></section>'+
- '<div class="footer">Авито Лиды · Подготовлено для предварительного обсуждения. Замечания следует подтверждать перед отправкой продавцу.</div></body></html>';
- const w=window.open('','_blank');
- if(!w){alert('Браузер заблокировал окно PDF. Разреши всплывающие окна для Авито Лиды и повтори.');return}
- w.document.open();w.document.write(markup);w.document.close();
- w.addEventListener('load',()=>{w.focus();w.print()},{once:true});
- // Browser print dialog: select “Save as PDF”. No remote PDF services or external fonts.
+ try{
+  const assessment=analyzeMailCandidate(candidate);
+  const evidence=evidenceAudit(candidate);
+  const known=!!String(candidate.auditDescription||'').trim();
+  const confirmed=typeof candidate.publicUrl==='string'&&/^https:\/\/(?:www\.)?avito\.ru\//.test(candidate.publicUrl)&&new RegExp('_'+candidate.itemId+'(?:[/?#]|$)').test(candidate.publicUrl);
+  const sections=[
+   {title:'Что известно',items:[known?'Получено описание карточки: анализируется доступный текст, не всё объявление.':'Из рассылки доступны только название, категория и ID. Полная карточка не изучалась.', 'Предварительный приоритет: '+assessment.tier]},
+   {title:'Признаки по названию',items:assessment.reasons},
+   ...(known&&evidence.issues.length?[{title:'Возможные точки улучшения',items:evidence.issues}]:[]),
+   ...(known&&evidence.strengths.length?[{title:'Что есть в описании',items:evidence.strengths}]:[]),
+   {title:'Рекомендации',items:[
+    'Уточнить, раскрывает ли заголовок услугу и выгоды для покупателя.',
+    'Проверить понятность комплектации, сроков, стоимости и условий заказа.',
+    'Оценить фотографии: показывают ли они результат, детали и качество.',
+    'Дополнить карточку ответами на частые вопросы, если их нет.'
+   ]},
+   {title:'Что не проверено',items:known?[
+    'Качество фотографий визуально не оценивалось.',
+    'Актуальность и коммерческие результаты объявления не подтверждены.',
+    'Перед отправкой продавцу проверьте каждое наблюдение.'
+   ]:[
+    'Описание и качество фотографий не проверялись.',
+    'Цена, условия и актуальность не подтверждены.',
+    'Это предварительный план проверки, не заключение о недостатках.'
+   ]}
+  ];
+  // Self-contained A4 JPEG-backed PDF. Text drawn by the browser's native font engine,
+  // so Russian characters render without external libraries or popup windows.
+  const W=1240,H=1754,L=92,R=1150,TOP=135,BOTTOM=1640;
+  const pages=[];let canvas,ctx,y;
+  function newPage(){
+   canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;
+   ctx=canvas.getContext('2d');if(!ctx)throw Error('Нет доступа к Canvas');
+   ctx.fillStyle='#ffffff';ctx.fillRect(0,0,W,H);
+   ctx.fillStyle='#155caa';ctx.fillRect(0,0,W,21);
+   ctx.fillStyle='#536b86';ctx.font='24px Arial, sans-serif';
+   ctx.fillText('АВИТО ЛИДЫ  /  ПРЕДВАРИТЕЛЬНЫЙ РАЗБОР',L,82);
+   ctx.fillStyle='#d8e3ef';ctx.fillRect(L,1680,R-L,2);
+   ctx.fillStyle='#64748b';ctx.font='20px Arial, sans-serif';
+   ctx.fillText('Данные для ознакомления. Проверяйте выводы перед отправкой.',L,1720);
+   y=TOP;pages.push(canvas);
+  }
+  function available(h){if(y+h>BOTTOM)newPage()}
+  function lines(value,font,maxWidth){
+   ctx.font=font;
+   const text=String(value??'').replace(/\s+/g,' ').trim();
+   const words=text.split(' '),res=[];let line='';
+   for(const word of words){
+    if(!word)continue;
+    const candidate=line?line+' '+word:word;
+    if(ctx.measureText(candidate).width<=maxWidth){line=candidate;continue}
+    if(line){res.push(line);line=''}
+    if(ctx.measureText(word).width<=maxWidth){line=word;continue}
+    let part='';
+    for(const ch of word){
+     if(ctx.measureText(part+ch).width>maxWidth&&part){res.push(part);part=''}
+     part+=ch;
+    }
+    line=part;
+   }
+   if(line)res.push(line);
+   return res.length?res:[''];
+  }
+  function paragraph(value,{size=28,bold=false,color='#23374f',indent=0,margin=14}={}){
+   const font=(bold?'bold ':'')+size+'px Arial, sans-serif';
+   const lh=Math.round(size*1.46),rows=lines(value,font,R-L-indent);
+   for(const row of rows){
+    available(lh);
+    ctx.fillStyle=color;ctx.font=font;ctx.fillText(row,L+indent,y);y+=lh;
+   }
+   available(margin);y+=margin;
+  }
+  function heading(value){
+   available(78);y+=19;
+   paragraph(value,{size:34,bold:true,color:'#175ea6',margin:14});
+  }
+  newPage();
+  paragraph(candidate.name||'Объявление Авито',{size:45,bold:true,color:'#132b4c',margin:24});
+  paragraph('Дата: '+new Date().toLocaleDateString('ru-RU')+'   ·   ID: '+candidate.itemId,{size:25,color:'#60748e'});
+  paragraph('Ниша: '+(candidate.niche||'Не определена')+'   ·   Город: '+(candidate.city||'Не определён'),{size:25});
+  if(confirmed)paragraph('Ссылка: '+candidate.publicUrl,{size:22,color:'#155caa',margin:24});
+  else paragraph('Прямая ссылка на объявление не подтверждена.',{size:22,color:'#8b6740',margin:24});
+  for(const sec of sections){
+   heading(sec.title);
+   for(const item of sec.items||[]){paragraph('• '+item,{indent:10,size:27,margin:9})}
+  }
+  const encoder=new TextEncoder(),chunks=[];let cursor=0;
+  function put(data){
+   const bytes=typeof data==='string'?encoder.encode(data):data;
+   chunks.push(bytes);cursor+=bytes.length;
+  }
+  function b64bytes(data){
+   const binary=atob(data);const out=new Uint8Array(binary.length);
+   for(let i=0;i<binary.length;i++)out[i]=binary.charCodeAt(i);
+   return out;
+  }
+  const objects={},count=2+pages.length*3;
+  put('%PDF-1.4\n');
+  function obj(i,content){objects[i]=cursor;put(i+' 0 obj\n');put(content);put('\nendobj\n')}
+  obj(1,'<< /Type /Catalog /Pages 2 0 R >>');
+  obj(2,'<< /Type /Pages /Count '+pages.length+' /Kids ['+pages.map((_,i)=>(3+3*i)+' 0 R').join(' ')+'] >>');
+  for(let i=0;i<pages.length;i++){
+   const page=3+3*i,img=page+1,stream=page+2;
+   const jpg=b64bytes(pages[i].toDataURL('image/jpeg',0.89).split(',')[1]);
+   obj(page,'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /XObject << /Im0 '+img+' 0 R >> >> /Contents '+stream+' 0 R >>');
+   objects[img]=cursor;put(img+' 0 obj\n<< /Type /XObject /Subtype /Image /Width '+W+' /Height '+H+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+jpg.length+' >>\nstream\n');put(jpg);put('\nendstream\nendobj\n');
+   const ops='q\n595.28 0 0 841.89 0 0 cm\n/Im0 Do\nQ\n';
+   obj(stream,'<< /Length '+encoder.encode(ops).length+' >>\nstream\n'+ops+'endstream');
+  }
+  const xref=cursor;put('xref\n0 '+(count+1)+'\n0000000000 65535 f \n');
+  for(let i=1;i<=count;i++)put(String(objects[i]).padStart(10,'0')+' 00000 n \n');
+  put('trailer\n<< /Size '+(count+1)+' /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF');
+  const blob=new Blob(chunks,{type:'application/pdf'});
+  const url=URL.createObjectURL(blob);
+  const anchor=document.createElement('a');
+  anchor.href=url;anchor.download='Avito_razbor_'+String(candidate.itemId||'lead').replace(/[^0-9a-z_-]/gi,'')+'.pdf';
+  document.body.appendChild(anchor);anchor.click();anchor.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),60000);
+  const status=$('mailImportStatus');
+  if(status)status.textContent='PDF создан и отправлен в загрузки. Если файл не появился, разреши загрузки для этого сайта.';
+ }catch(err){
+  const status=$('mailImportStatus');
+  if(status)status.textContent='Не удалось создать PDF: '+(err?.message||'неизвестная ошибка');
+  alert('Не удалось создать PDF. '+(err?.message||'Попробуй другой браузер.'));
+ }
 }
 
 function renderMailCandidates(){
