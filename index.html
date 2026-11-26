@@ -470,10 +470,9 @@ function exportCandidatePdf(candidate){
   return;
  }
  try{
-  const assessment=analyzeMailCandidate(candidate);
   const confirmed=typeof candidate.publicUrl==='string'&&/^https:\/\/(?:www\.)?avito\.ru\//.test(candidate.publicUrl)&&new RegExp('_'+candidate.itemId+'(?:[/?#]|$)').test(candidate.publicUrl);
   const findings=specificCardFindings(candidate);
-  if(findings.length<3)throw Error('Недостаточно фактов для содержательного разбора');
+  if(!findings.length)throw Error('Нет конкретных наблюдений для разбора');
   // Client-facing report: concise, concrete and free of internal notes.
   const visibleFindings=findings.filter(f=>f.title!=='Явных текстовых проблем по заданным критериям не обнаружено').slice(0,4);
   const sections=[
@@ -481,7 +480,7 @@ function exportCandidatePdf(candidate){
       title:(i+1)+'. '+f.title,
       items:[
         'В объявлении: '+String(f.observation||'').replace(/^Из текста: /,'').replace(/^Найдено: /,'').trim(),
-        'Что предлагаю изменить: '+String(f.recommendation||'').trim()
+        'Что предлагаю изменить: '+String(f.recommendation||'').replace(/\s*(?:Не добавлять неподтверждённые характеристики\.|Пока этап не подтверждён, готовое обещание добавлять нельзя\.|Если данных нет, не выдавать это за действующую акцию\.|не придумывать\.)/gi,'').trim()
       ]
     }))
   ];
