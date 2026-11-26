@@ -530,7 +530,7 @@ $('mailCandidatesList').onclick=async e=>{
   await syncMailCandidates();
   const fresh=mailCandidates.find(x=>x.itemId===candidate.itemId);
   const link=fresh&&(typeof fresh.publicUrl==='string'&&validUrl(fresh.publicUrl)&&new RegExp('_'+fresh.itemId+'(?:[/?#]|$)').test(fresh.publicUrl)?fresh.publicUrl:validDigestLink(fresh.trackingUrl,fresh.itemId)?fresh.trackingUrl:'');
-  if(link){window.open(link,'_blank','noopener,noreferrer');return}
+  if(link){window.location.assign(link);return}
   alert('Кнопка восстановлена, но ссылка на это объявление пока недоступна в данном браузере. Непроверенную ссылку по ID не создаю. Если ранее всё открывалось на другом устройстве, открой Авито Лиды там: локальный ключ шифрования и сохранённые ссылки не переносятся автоматически.');
   return;
  }
