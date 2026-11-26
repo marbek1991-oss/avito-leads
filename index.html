@@ -308,6 +308,49 @@ $('runCardAudit').onclick=()=>{
  c.auditDate=new Date().toISOString();
  saveMailCandidates();renderMailCandidates();$('cardAuditDialog').close();
 };
+
+function exportCandidatePdf(candidate){
+ const assessment=analyzeMailCandidate(candidate);
+ const evidence=evidenceAudit(candidate);
+ const known=!!String(candidate.auditDescription||'').trim();
+ const safePublic=typeof candidate.publicUrl==='string'&&/^https:\/\/(?:www\.)?avito\.ru\//.test(candidate.publicUrl)&&new RegExp('_'+candidate.itemId+'(?:[/?#]|$)').test(candidate.publicUrl);
+ // Never disclose token-bearing email digest links in client-facing PDFs.
+ const source=safePublic?candidate.publicUrl:'Ссылка на карточку не подтверждена';
+ const section=(title,arr)=>arr.length?'<section><h2>'+title+'</h2><ul>'+arr.map(v=>'<li>'+esc(v)+'</li>').join('')+'</ul></section>':'';
+ const notes=known?[
+  'Описание получено из открытой карточки или введено пользователем; оценка относится только к доступному тексту.',
+  'Фотографии не оценивались визуально. Их количество учитывается лишь при наличии данных.',
+  'Перед отправкой разбора клиенту проверьте актуальность объявления и выводы.'
+ ]:[
+  'Доступны только заголовок и тематика из уведомления Авито.',
+  'Описание, качество фотографий, цена и актуальность объявления не проверены.',
+  'Это предварительный план проверки, а не заключение о недостатках объявления.'
+ ];
+ const tips=[
+  'Проверить, раскрывает ли заголовок ключевую услугу и отличие предложения.',
+  'Проверить, понятны ли состав услуги, комплектация, стоимость и сроки.',
+  'Посмотреть, помогают ли фотографии оценить результат, масштаб и качество работы.',
+  'При необходимости добавить ответы на частые вопросы покупателей и условия связи.'
+ ];
+ const date=new Date().toLocaleDateString('ru-RU');
+ const markup='<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>Разбор Авито — '+esc(candidate.name||candidate.itemId)+'</title><style>'+
+ '@page{size:A4;margin:17mm}*{box-sizing:border-box}body{margin:0;font:11pt/1.55 Arial,Helvetica,sans-serif;color:#182d49}h1{font-size:23pt;line-height:1.17;margin:12px 0 8px}h2{font-size:13pt;color:#165ca9;margin:0 0 8px}section{margin:24px 0;break-inside:avoid}p{margin:8px 0}ul{padding-left:22px;margin:8px 0}li{margin:6px 0}header{border-bottom:3px solid #1971c9;padding-bottom:19px}.eyebrow{font-weight:700;color:#1764ae;font-size:9pt;letter-spacing:.13em}.small{font-size:9pt;color:#607187}.info{margin-top:18px;padding:12px 15px;background:#f0f5fc;border-radius:10px;overflow-wrap:anywhere}.tag{display:inline-block;color:#175da6;font-size:10pt;font-weight:700}.note{border-left:3px solid #dba84a;padding:9px 14px;background:#fff8e9}.footer{margin-top:30px;padding-top:12px;border-top:1px solid #dae4f0;color:#65758c;font-size:9pt}a{color:#0b60b0;overflow-wrap:anywhere}'+
+ '</style></head><body><header><div class="eyebrow">АВИТО ЛИДЫ · БЕСПЛАТНЫЙ РАЗБОР</div><h1>'+esc(candidate.name||'Объявление Авито')+'</h1><div class="tag">'+esc(assessment.tier)+'</div><p class="small">Подготовлено: '+date+' · ID объявления: '+esc(candidate.itemId)+' · Ниша: '+esc(candidate.niche||'Не указана')+'</p></header>'+
+ '<div class="info"><b>Источник:</b> '+(safePublic?'<a href="'+esc(source)+'">'+esc(source)+'</a>':esc(source))+'<br><b>Город:</b> '+esc(candidate.city||'Не определён')+'<br><b>Статус:</b> '+(known?'Предварительный аудит по тексту карточки':'Предварительный разбор по заголовку')+'</div>'+
+ '<section><h2>Что удалось установить</h2><p>'+(known?'В распоряжении есть текст описания карточки. Ниже перечислены наблюдения, которые можно сделать по нему.':'Из уведомления известно название объявления и его предполагаемая ниша. Полное содержимое карточки пока недоступно.')+'</p></section>'+
+ section('Предварительные признаки',assessment.reasons)+
+ (known?section('Возможные точки улучшения по тексту',evidence.issues):'')+
+ (known?section('Что присутствует в описании',evidence.strengths):'')+
+ section('Рекомендации для проверки и улучшения',tips)+
+ '<section class="note"><h2>Границы разбора</h2><ul>'+notes.map(v=>'<li>'+esc(v)+'</li>').join('')+'</ul></section>'+
+ '<div class="footer">Авито Лиды · Подготовлено для предварительного обсуждения. Замечания следует подтверждать перед отправкой продавцу.</div></body></html>';
+ const w=window.open('','_blank');
+ if(!w){alert('Браузер заблокировал окно PDF. Разреши всплывающие окна для Авито Лиды и повтори.');return}
+ w.document.open();w.document.write(markup);w.document.close();
+ w.addEventListener('load',()=>{w.focus();w.print()},{once:true});
+ // Browser print dialog: select “Save as PDF”. No remote PDF services or external fonts.
+}
+
 function renderMailCandidates(){
  const container=$('mailCandidatesList');
  if(!container)return;
@@ -360,6 +403,7 @@ $('mailCandidatesList').onclick=e=>{
   $('cardAuditStatus').textContent='';
   $('cardAuditDialog').showModal();return;
  }
+ if(b.dataset.mailAction==='pdf'){exportCandidatePdf(candidate);return;}
  if(b.dataset.mailAction==='offer'){
   const msg=generateMailOffer(candidate);
   if(navigator.clipboard?.writeText){navigator.clipboard.writeText(msg).then(()=>{const status=$('mailImportStatus');if(status)status.textContent='Предложение скопировано — можно вставить в чат продавца. Сообщение не отправлено.'}).catch(()=>{prompt('Скопируй предложение:',msg)});}
