@@ -1,7 +1,7 @@
-"""Private Mail.ru -> browser-importable candidate export.
+"""Mail.ru -> public-listing-metadata export for GitHub Pages.
 
-Writes an Actions artifact only: never commit it or publish to GitHub Pages.
-All Mail.ru links/tokens are discarded. No outgoing Avito requests.
+Exports ONLY public listing IDs, titles and inferred niches, no private
+email links/tokens/address or messages. No outgoing Avito requests.
 """
 import datetime as dt
 from email import policy
@@ -117,7 +117,7 @@ def main():
     OUT.write_text(json.dumps({"format": "avito-mail-candidates-v1", "created_at": dt.datetime.now(dt.timezone.utc).isoformat(), "items": items}, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"Кандидатов в приватном файле: {len(items)}")
     print("Токены, почтовые адреса, темы и персональные ссылки НЕ сохранены.")
-    print("Результат доступен только как GitHub Actions artifact; не публикуется на Pages.")
+    print("Публикуются только ID и названия объявлений для автоматической синхронизации приложения.")
     return 0
 
 if __name__ == "__main__":
