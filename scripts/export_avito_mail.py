@@ -3,6 +3,7 @@
 Exports ONLY public listing IDs, titles and inferred niches, no private
 email links/tokens/address or messages. No outgoing Avito requests.
 """
+import base64
 import datetime as dt
 from email import policy
 from email.parser import BytesParser
@@ -35,10 +36,12 @@ class DigestParser(HTMLParser):
         self.current_id = None
         self.text = []
         self.items = {}
+        self.current_link = None
     def handle_starttag(self, tag, attrs):
         if tag == "a":
             href = dict(attrs).get("href", "")
             self.current_id = digest_item_id(href)
+            self.current_link = href if self.current_id else None
             self.text = []
     def handle_data(self, data):
         if self.current_id:
@@ -47,8 +50,9 @@ class DigestParser(HTMLParser):
         if tag == "a" and self.current_id:
             title = " ".join(" ".join(self.text).split())[:200]
             if title:
-                self.items.setdefault(self.current_id, title)
+                self.items.setdefault(self.current_id, {"name": title, "link": self.current_link})
             self.current_id = None
+            self.current_link = None
             self.text = []
 
 def collect(message):
@@ -106,17 +110,37 @@ def main():
                 client.logout()
             except (imaplib.IMAP4.error, OSError):
                 pass
+    key_string = os.getenv("AVITO_LINKS_KEY", "").strip()
+    cipher = None
+    if key_string:
+        try:
+            from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+            key = base64.b64decode(key_string, validate=True)
+            if len(key) != 32:
+                raise ValueError("Invalid key length")
+            cipher = AESGCM(key)
+        except (ValueError, ImportError):
+            print("AVITO_LINKS_KEY invalid or cryptography missing; private links not exported.")
+            return 1
     items = []
-    for item_id, title in list(candidates.items())[:300]:
+    for item_id, data in list(candidates.items())[:300]:
+        title = data["name"]
         text = title.lower()
         niche = next((name for name, terms in NICHES if any(t in text for t in terms)), "Другое")
         # City is not reliably present in anchor text; never invent.
-        items.append({"itemId": item_id, "name": title, "city": "Не определён", "niche": niche,
-                      "source": "Письмо Авито — сохранённый поиск", "verification": "Не проверено"})
+        item = {"itemId": item_id, "name": title, "city": "Не определён", "niche": niche,
+                "source": "Письмо Авито — сохранённый поиск", "verification": "Не проверено"}
+        link = data.get("link")
+        if cipher and link and digest_item_id(link) == item_id:
+            nonce = os.urandom(12)
+            ciphertext = cipher.encrypt(nonce, link.encode("utf-8"), item_id.encode("ascii"))
+            item["linkCipher"] = base64.b64encode(nonce + ciphertext).decode("ascii")
+        items.append(item)
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps({"format": "avito-mail-candidates-v1", "created_at": dt.datetime.now(dt.timezone.utc).isoformat(), "items": items}, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"Кандидатов в приватном файле: {len(items)}")
-    print("Токены, почтовые адреса, темы и персональные ссылки НЕ сохранены.")
+    print("Токены и персональные ссылки не сохраняются в открытом виде.")
+    print("Зашифрованные ссылки: " + ("включены" if cipher else "выключены; нужен AVITO_LINKS_KEY"))
     print("Публикуются только ID и названия объявлений для автоматической синхронизации приложения.")
     return 0
 
