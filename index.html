@@ -394,7 +394,7 @@ function specificCardFindings(c){
  const shortTime=/\b(?:за\s*)(\d+)\s*(?:дн(?:я|ей|ь)|сут(?:ки|ок))\b/i;
  const time=urgency.exec(raw)||shortTime.exec(raw);
  if(time){
-  const window=raw.slice(Math.max(0,time.index-45),Math.min(raw.length,time.index+120));
+  const window=raw.slice(Math.max(0,time.index-45),Math.min(raw.length,time.index+time[0].length+18));
   if(!/монтаж|установк|сборк|доставк|изготовлен|производств/i.test(window)){
    add('time','Неясно, что входит в заявленный срок',
     'В объявлении написано: «'+extract(urgency.test(raw)?/\b(?:за\s*)?\d+\s*[-–—]\s*\d+\s*(?:дн(?:я|ей|ь)|сут(?:ки|ок)|час(?:а|ов)?)/i:/\bза\s*\d+\s*(?:дн(?:я|ей|ь)|сут(?:ки|ок))\b/i,65)+'».',
