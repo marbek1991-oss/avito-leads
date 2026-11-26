@@ -17,13 +17,16 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Install encryption dependency
+        run: python -m pip install --disable-pip-version-check cryptography==46.0.3
       - name: Read saved-search notifications and export sanitized candidates
         env:
           MAILRU_EMAIL: ${{ vars.MAILRU_EMAIL }}
           MAILRU_APP_PASSWORD: ${{ secrets.MAILRU_APP_PASSWORD }}
+          AVITO_LINKS_KEY: ${{ secrets.AVITO_LINKS_KEY }}
           MAIL_CANDIDATES_OUTPUT: mail-candidates.json
         run: python scripts/export_avito_mail.py
-      - name: Publish only listing IDs and titles (never email links or tokens)
+      - name: Publish listing metadata with encrypted links only
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
