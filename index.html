@@ -5,7 +5,7 @@
 #tab-mail>.panel:nth-of-type(2),#tab-mail>.panel:nth-of-type(4){display:none}
 #tab-mail #importMailCandidates,#tab-mail #importMailLinks,#tab-mail .buttonbar>a.btn{display:none}
 #tab-mail .lead .hint>li{margin:3px 0}
-#tab-mail .lead .actions button[data-mail-action="audit"],#tab-mail .lead .actions button[data-mail-action="addlink"]{display:none}
+#tab-mail .lead .actions button[data-mail-action="audit"]{display:none}
 #tab-mail .lead .actions button[data-mail-action="promote"],#tab-mail .lead .actions button[data-mail-action="remove"]{display:none}
 #tab-search,#tab-add,#tab-data{display:none!important}
 .tabs button[data-tab="add"],.tabs button[data-tab="search"],.tabs button[data-tab="data"]{display:none}
@@ -478,7 +478,7 @@ function renderMailCandidates(){
  container.innerHTML=selected.length?selected.map(x=>{
   const assessment=analyzeMailCandidate(x);
   const safeLink=validDigestLink(x.trackingUrl,x.itemId)?x.trackingUrl:'';
-  const confirmedPublic=typeof x.publicUrl==='string'&&validUrl(x.publicUrl)&&new RegExp('_'+x.itemId+'(?:[/?#]|$)').test(x.publicUrl);const action=confirmedPublic?'<a class="btn" href="'+esc(x.publicUrl)+'" target="_blank" rel="noopener noreferrer">Открыть объявление</a>':safeLink?'<a class="btn" href="'+esc(safeLink)+'" target="_blank" rel="noopener noreferrer">Открыть на Авито</a>':'<button data-mail-action="addlink" data-mail-id="'+esc(x.itemId)+'">Добавить ссылку из письма</button>';
+  const confirmedPublic=typeof x.publicUrl==='string'&&validUrl(x.publicUrl)&&new RegExp('_'+x.itemId+'(?:[/?#]|$)').test(x.publicUrl);const action=confirmedPublic?'<a class="btn primary" href="'+esc(x.publicUrl)+'" target="_blank" rel="noopener noreferrer">Открыть на Авито</a>':safeLink?'<a class="btn primary" href="'+esc(safeLink)+'" target="_blank" rel="noopener noreferrer">Открыть на Авито</a>':'<button data-mail-action="missinglink" data-mail-id="'+esc(x.itemId)+'">Открыть на Авито · нет ссылки</button>';
   const reasons=assessment.reasons.map(reason=>'<li>'+esc(reason)+'</li>').join('');
   const audit=evidenceAudit(x);
   const auditHtml=x.auditDescription?'<div class="panel"><b>Аудит по предоставленным данным:</b> '+esc(audit.state)+(audit.issues.length?'<p><b>Возможные недостатки:</b> '+esc(audit.issues.join('; '))+'</p>':'<p>По проверенным признакам недостатков не обнаружено.</p>')+(audit.strengths.length?'<p><b>Подтверждено:</b> '+esc(audit.strengths.join('; '))+'</p>':'')+'</div>':'';
@@ -522,6 +522,11 @@ $('mailCandidatesList').onclick=e=>{
   if(navigator.clipboard?.writeText){navigator.clipboard.writeText(msg).then(()=>{const status=$('mailImportStatus');if(status)status.textContent='Предложение скопировано — можно вставить в чат продавца. Сообщение не отправлено.'}).catch(()=>{prompt('Скопируй предложение:',msg)});}
   else prompt('Скопируй предложение:',msg);
   return;
+ }
+ if(b.dataset.mailAction==='missinglink'){
+  const status=$('mailImportStatus');
+  if(status)status.textContent='Для объявления ID '+candidate.itemId+' ссылка ещё не получена. Обновляю рассылку; если ссылка не появится, проверь сохранённый ключ в этом браузере.';
+  syncMailCandidates();return;
  }
  if(b.dataset.mailAction==='addlink'){
   const link=prompt('Вставь ИСХОДНУЮ ссылку из письма Авито для объявления ID '+candidate.itemId+':','');
