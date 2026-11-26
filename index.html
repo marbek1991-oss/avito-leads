@@ -430,7 +430,7 @@ function exportCandidatePdf(candidate){
   const findings=specificCardFindings(candidate);
   if(findings.length<3)throw Error('Недостаточно фактов для содержательного разбора');
   const sections=[
-   {title:'Исходные данные и статус',items:['Название: '+candidate.name,'Получено описание ('+candidate.auditDescription.trim().length+' символов).','Это документ по тексту объявления: фотографии, поисковые позиции и статистика заявок не изучены.']},
+   {title:'Исходные данные и статус',items:['Название: '+candidate.name,'Получено описание ('+candidate.auditDescription.trim().length+' символов).'+(candidate.auditSource==='Расширение Chrome'?' Источник: открытая карточка Авито.':''),...(candidate.auditPrice?['Цена из карточки на момент просмотра: '+candidate.auditPrice]:[]),...(candidate.auditPhotos!==''&&candidate.auditPhotos!==null&&candidate.auditPhotos!==undefined?['Найдено видимых изображений: '+candidate.auditPhotos+' (качество фотографий не оценено).']:[]),'Это документ по тексту объявления: фотографии, поисковые позиции и статистика заявок не изучены.']},
    ...findings.flatMap((f,i)=>[{title:(i+1)+'. '+f.title,items:['Наблюдение: '+f.observation,'Почему важно: '+f.impact,'Рекомендация: '+f.recommendation]}]),
    
    {title:'Следующие шаги',items:['Сверить выводы с открытой карточкой Авито.','Уточнить фактические характеристики и условия у продавца.','После подтверждения исправить конкретные фрагменты заголовка и описания.']}
@@ -540,6 +540,14 @@ function exportCandidatePdf(candidate){
  }
 }
 
+
+const AUTO_AUDIT_PENDING_KEY='avito_leads_auto_audit_pending';
+function markAutoAudit(id){
+ sessionStorage.setItem(AUTO_AUDIT_PENDING_KEY,String(id));
+ const status=$('mailImportStatus');
+ if(status) status.textContent='Открываю объявление. Когда расширение Chrome прочитает карточку, PDF будет подготовлен здесь автоматически.';
+}
+
 function renderMailCandidates(){
  const container=$('mailCandidatesList');
  if(!container)return;
@@ -554,7 +562,7 @@ function renderMailCandidates(){
  container.innerHTML=selected.length?selected.map(x=>{
   const assessment=analyzeMailCandidate(x);
   const safeLink=validDigestLink(x.trackingUrl,x.itemId)?x.trackingUrl:'';
-  const confirmedPublic=typeof x.publicUrl==='string'&&validUrl(x.publicUrl)&&new RegExp('_'+x.itemId+'(?:[/?#]|$)').test(x.publicUrl);const action=confirmedPublic?'<a class="btn primary avito-open" href="'+esc(x.publicUrl)+'" target="_blank" rel="noopener noreferrer">Открыть на Авито</a>':safeLink?'<a class="btn primary avito-open" href="'+esc(safeLink)+'" target="_blank" rel="noopener noreferrer">Открыть на Авито</a>':'<button class="avito-open" data-mail-action="missinglink" data-mail-id="'+esc(x.itemId)+'">🔒 Ссылка закрыта — восстановить</button>';
+  const confirmedPublic=typeof x.publicUrl==='string'&&validUrl(x.publicUrl)&&new RegExp('_'+x.itemId+'(?:[/?#]|$)').test(x.publicUrl);const action=confirmedPublic?'<a class="btn primary avito-open" data-auto-audit-id="'+esc(x.itemId)+'" href="'+esc(x.publicUrl)+'" target="_blank" rel="noopener noreferrer">Открыть на Авито и разобрать</a>':safeLink?'<a class="btn primary avito-open" data-auto-audit-id="'+esc(x.itemId)+'" href="'+esc(safeLink)+'" target="_blank" rel="noopener noreferrer">Открыть на Авито и разобрать</a>':'<button class="avito-open" data-mail-action="missinglink" data-mail-id="'+esc(x.itemId)+'">🔒 Ссылка закрыта — восстановить</button>';
   const reasons=assessment.reasons.map(reason=>'<li>'+esc(reason)+'</li>').join('');
   const audit=evidenceAudit(x);
   const auditHtml=x.auditDescription?'<div class="panel"><b>Аудит по предоставленным данным:</b> '+esc(audit.state)+(audit.issues.length?'<p><b>Возможные недостатки:</b> '+esc(audit.issues.join('; '))+'</p>':'<p>По проверенным признакам недостатков не обнаружено.</p>')+(audit.strengths.length?'<p><b>Подтверждено:</b> '+esc(audit.strengths.join('; '))+'</p>':'')+'</div>':'';
@@ -581,6 +589,10 @@ $('mailCandidatesInput').onchange=async e=>{
  }catch(err){$('mailImportStatus').textContent='Ошибка: '+err.message}
  e.target.value='';
 };
+$('mailCandidatesList').addEventListener('click',e=>{
+ const link=e.target.closest('a[data-auto-audit-id]');
+ if(link)markAutoAudit(link.dataset.autoAuditId);
+},true);
 $('mailCandidatesList').onclick=async e=>{
  const b=e.target.closest('button[data-mail-action]');if(!b)return;
  const candidate=mailCandidates.find(x=>x.itemId===b.dataset.mailId);if(!candidate)return;
@@ -638,19 +650,27 @@ window.addEventListener('message',event=>{
   const u=new URL(src);
   if(u.protocol!=='https:'||!['avito.ru','www.avito.ru'].includes(u.hostname)||!u.pathname.endsWith('_'+id))return;
  }catch{return}
- if(c.auditDescription===d.description&&c.auditSource==='Расширение Chrome')return;
+ const pendingId=sessionStorage.getItem(AUTO_AUDIT_PENDING_KEY);
+ if(c.auditDescription===d.description&&c.auditSource==='Расширение Chrome'&&pendingId!==id)return;
  c.auditDescription=d.description.slice(0,20000);
  c.auditPhotos=Number.isInteger(d.photos)&&d.photos>=1&&d.photos<=500?d.photos:'';
+ c.auditPrice=typeof d.price==='string'?d.price.slice(0,100):'';
+ if(c.city==='Не определён'&&typeof d.city==='string'&&d.city.trim())c.city=d.city.slice(0,120);
  c.auditContact='unknown';
  c.auditDate=d.observedAt||new Date().toISOString();
  c.auditSource='Расширение Chrome';
  c.publicUrl=src;
  saveMailCandidates();renderMailCandidates();
  const status=$('mailImportStatus');
- if(status)status.textContent='Автоматический аудит сохранён: '+c.name+' · ID '+id+'. Проверяй вывод по фактическому тексту.';
+ if(status)status.textContent='Получены реальные данные объявления «'+c.name+'»'+(c.auditPrice?' · цена: '+c.auditPrice:'')+'. PDF доступен для скачивания.';
+ if(pendingId===id){
+   sessionStorage.removeItem(AUTO_AUDIT_PENDING_KEY);
+   exportCandidatePdf(c);
+ }
 });
 
 loadMailCandidates();renderMailCandidates();syncMailCandidates();
+window.postMessage({type:'AVITO_LEADS_READY'},location.origin);
 
 load();render();if('serviceWorker'in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script></body></html>
