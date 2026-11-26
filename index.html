@@ -360,26 +360,61 @@ $('runCardAudit').onclick=()=>{
 document.getElementById('closePdfDownload').onclick=()=>document.getElementById('pdfDownloadDialog').close();
 
 function specificCardFindings(c){
- const body=String(c.auditDescription||'').trim();
- if(body.length<100)return [];
- const title=String(c.name||'Объявление').trim();
- const report=[];
- const checks=[
-  {label:'Размеры и параметры',re:/\b(?:\d+(?:[.,]\d+)?\s*(?:м²|м2|метр|мм|см|м\b)|размер|площад|габарит|ширин|длин|высот)\b/i,why:'покупателю сложно сравнить предложения без понятных характеристик',fix:'Добавить отдельный блок «Размеры и характеристики» с фактическими параметрами изделия или услуги.'},
-  {label:'Комплектация и материалы',re:/материал|комплектац|стен|утеплен|профил|каркас|фундамент|состав работ/i,why:'неясно, что именно входит в предложение',fix:'Указать материалы, базовую комплектацию и дополнительные опции, опираясь на реальные условия продавца.'},
-  {label:'Сроки и организация работ',re:/срок|дней|недел|месяц|доставк|монтаж|установк|выезд|самовывоз/i,why:'клиенту приходится отдельно уточнять логистику и сроки',fix:'Добавить известные условия изготовления, доставки и монтажа; если сроки индивидуальны, так и написать.'},
-  {label:'Гарантия и договор',re:/гарант|договор|акт прием|официальн/i,why:'потенциальному покупателю не хватает информации о порядке сотрудничества',fix:'Уточнить, предоставляются ли договор или гарантия; не обещать их, если продавец не подтвердил.'},
-  {label:'Цена и состав стоимости',re:/₽|руб|стоимост|цен|оплат|рассрочк|бюджет/i,why:'неясно, как формируется стоимость заказа',fix:'Пояснить, что входит в указанную стоимость и от чего зависит итоговая цена.'}
+ const description=String(c.auditDescription||'').replace(/\s+/g,' ').trim();
+ if(description.length<120)return [];
+ const title=String(c.name||'').replace(/\s+/g,' ').trim();
+ const niche=String(c.niche||'').toLowerCase();
+ const snippets=description.match(/[^.!?;\n]+(?:[.!?;]|$)/g)||[description];
+ const sample=snippets.map(v=>v.trim()).filter(Boolean).slice(0,2).join(' ').slice(0,270);
+ const facts=[],issues=[],positive=[];
+ const specs=[
+  {tag:'размеры и площадь',re:/\b\d+(?:[.,]\d+)?\s*(?:м²|м2|кв\.?\s?м|метр(?:ов|а)?|мм|см)\b|размер|площад|габарит|ширин|длин|высот/i,placeholder:'указать реальные размеры, площадь и параметры'},
+  {tag:'материалы и комплектация',re:/материал|комплектац|стен|утеплен|профил|каркас|фундамент|брус|доск|металл/i,placeholder:'перечислить материалы и точную комплектацию'},
+  {tag:'сроки и доставка',re:/срок|дней|недел|месяц|доставк|монтаж|установк|выезд|самовывоз/i,placeholder:'указать сроки и условия доставки или монтажа'},
+  {tag:'условия стоимости',re:/₽|руб|стоимост|цен|оплат|рассрочк|бюджет/i,placeholder:'уточнить стоимость и что в неё включено'}
  ];
- for(const check of checks){
-  if(!check.re.test(body)){
-   report.push({title:check.label,observation:'В предоставленном описании не найдено явного упоминания: '+check.label.toLowerCase()+'.',impact:check.why,recommendation:check.fix});
-  }
+ for(const x of specs){
+  if(x.re.test(description)){facts.push(x.tag);positive.push('В описании встречается информация о '+x.tag+'.')}
+  else issues.push(x);
  }
- if(title.length<25)report.unshift({title:'Заголовок',observation:'Заголовок содержит '+title.length+' символов: «'+title+'».',impact:'В кратком названии может не хватать конкретики для выбора.',recommendation:'Уточнить тип предложения и главное отличие, не добавляя неподтверждённых характеристик.'});
- const photos=String(c.auditPhotos??'');
- if(photos==='0'||(photos!==''&&Number(photos)>0&&Number(photos)<3)){
-  report.push({title:'Фотографии',observation:'Указано фотографий: '+photos+'.',impact:'Небольшой визуальный ряд может не показать разные стороны товара или результата работ.',recommendation:'Добавить несколько разных реальных ракурсов, примеры выполненных работ и детали комплектации.'});
+ const isHome=/модульн|дом/.test(niche)||/модульн|дом под ключ|каркасн/.test(title.toLowerCase());
+ const isBath=/бан/.test(niche)||/баня|бани|бань/.test(title.toLowerCase());
+ const isCabin=/бытов|вагон/.test(niche)||/бытовк|вагончик/.test(title.toLowerCase());
+ const focus=isHome?'комплектация дома, площадь, фундамент, доставка и сборка':isBath?'размеры бани, материалы, печь, утепление и монтаж':isCabin?'размеры бытовки, утепление, внутренняя отделка и доставка':'состав услуги, параметры, цена и сроки';
+ const report=[{
+  title:'Разбор исходного заголовка',
+  observation:'Текущий заголовок: «'+title+'».',
+  impact:'Покупателю важно сразу понять предмет предложения и отличительные характеристики; по одному названию нельзя доказать, что объявление работает плохо.',
+  recommendation:'Вариант структуры: «'+title+' — [подтверждённая характеристика / комплектация]». Добавлять только реальные факты, без необоснованных обещаний.'
+ }];
+ if(issues.length){
+  const names=issues.map(x=>x.tag).join(', ');
+  report.push({
+   title:'Не найдено в предоставленном описании',
+   observation:'В тексте, который был предоставлен для проверки, не обнаружены явные сведения: '+names+'.',
+   impact:'Часть покупателей может уйти к конкурентам, если им приходится уточнять базовые условия. Возможно, эти сведения есть в других полях карточки, которые не были получены.',
+   recommendation:'Дополнить описание отдельным блоком: «Характеристики и условия: '+issues.map(x=>x.placeholder).join('; ')+'.» Заполнить фактическими данными продавца.'
+  });
+ }
+ report.push({
+  title:'Фрагмент исходного описания',
+  observation:'Из полученного текста: «'+sample+'»',
+  impact:'Это реальный фрагмент переданного описания, а не предположение о карточке.',
+  recommendation:'Сделать структуру более понятной: короткое описание предложения → '+focus+' → подтверждённые преимущества → порядок заказа. Не выдумывать цену, характеристики или сроки.'
+ });
+ if(description.length<350)report.push({
+  title:'Объём описания',
+  observation:'Получено '+description.length+' символов текста.',
+  impact:'Небольшой объём может не раскрывать условия сложного заказа; однако само по себе количество символов не означает плохую эффективность.',
+  recommendation:'Проверить полноту конкретики: '+focus+'. Если данные уже есть в полях Авито, не дублировать их без необходимости.'
+ });
+ if(c.auditPhotos!==''&&c.auditPhotos!==undefined&&c.auditPhotos!==null&&Number(c.auditPhotos)<3){
+  report.push({
+   title:'Количество фотографий',
+   observation:'В переданных данных указано '+Number(c.auditPhotos)+' изображений.',
+   impact:'Мало изображений может ограничивать представление о товаре; качество самих снимков автоматически не проверялось.',
+   recommendation:'При наличии реальных материалов показать общий вид, детали и комплектацию. Не использовать чужие фотографии.'
+  });
  }
  return report.slice(0,5);
 }
@@ -390,7 +425,7 @@ function exportCandidatePdf(candidate){
   $('cardAuditDescription').value=candidate.auditDescription||'';
   $('cardAuditPhotos').value=candidate.auditPhotos??'';
   $('cardAuditContact').value=candidate.auditContact||'unknown';
-  $('cardAuditStatus').textContent='Для содержательного PDF нужны данные самой карточки. Открой объявление и скопируй описание сюда (не менее 100 символов). Пока есть только заголовок — этого недостаточно для аудита.';
+  $('cardAuditStatus').textContent='Полный разбор нельзя составить только по заголовку из рассылки. Описание объявления не получено. Открой объявление и вставь здесь реальный текст, чтобы PDF содержал конкретные фрагменты, замечания и примеры улучшений. Без исходного текста PDF не создаётся.';
   $('cardAuditDialog').showModal();
   return;
  }
@@ -401,7 +436,7 @@ function exportCandidatePdf(candidate){
   const confirmed=typeof candidate.publicUrl==='string'&&/^https:\/\/(?:www\.)?avito\.ru\//.test(candidate.publicUrl)&&new RegExp('_'+candidate.itemId+'(?:[/?#]|$)').test(candidate.publicUrl);
   const findings=specificCardFindings(candidate);
   const sections=[
-   {title:'Основание для анализа',items:['Заголовок: '+candidate.name,'Проверено только предоставленное описание ('+candidate.auditDescription.trim().length+' символов).','Проверка не включает актуальность карточки и визуальное качество изображений.']},
+   {title:'Основание для анализа',items:['Объявление: '+candidate.name,'Исходный текст описания: '+candidate.auditDescription.trim().slice(0,400)+(candidate.auditDescription.length>400?'…':''),'Проверено описание ('+candidate.auditDescription.trim().length+' символов); фотографии и актуальность отдельно не подтверждены.']},
    ...findings.flatMap((f,i)=>[{title:(i+1)+'. '+f.title,items:['Наблюдение: '+f.observation,'Почему важно: '+f.impact,'Рекомендация: '+f.recommendation]}]),
    ...(findings.length?[]:[{title:'Результат анализа текста',items:['По доступному описанию не выявлено перечисленных типовых пробелов. Это не подтверждает качество всей карточки.']}]),
    {title:'Следующие шаги',items:['Сверить выводы с открытой карточкой Авито.','Уточнить фактические характеристики и условия у продавца.','После подтверждения исправить конкретные фрагменты заголовка и описания.']}
@@ -520,7 +555,7 @@ function renderMailCandidates(){
  const stats=$('mailAuditSummary');
  if(stats){
   const priority=mailCandidates.filter(x=>analyzeMailCandidate(x).tier==='Приоритетный').length;
-  stats.textContent='Всего: '+mailCandidates.length+' · Приоритетных по теме: '+priority+' · Подтверждённых недостатков: 0 (до проверки карточек).';
+  stats.textContent='Всего: '+mailCandidates.length+' · Приоритетных по теме: '+priority+' · Проверка оформления возможна после получения описания.';
  }
  container.innerHTML=selected.length?selected.map(x=>{
   const assessment=analyzeMailCandidate(x);
