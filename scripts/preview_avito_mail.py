@@ -76,6 +76,7 @@ def nested_listing(value):
 def get_listing_links(message):
     links = set()
     hyperlink_count = 0
+    categories = {"avito": 0, "external": 0, "relative": 0}
     for part in message.walk():
         if part.is_multipart() or part.get_content_disposition() == "attachment":
             continue
@@ -95,12 +96,24 @@ def get_listing_links(message):
             parser.feed(body)
             candidates += parser.links
             hyperlink_count += len(parser.links)
+            for href in parser.links:
+                try:
+                    parsed_href = urlsplit(unescape(href))
+                    host = (parsed_href.hostname or "").lower()
+                    if host == "avito.ru" or host.endswith(".avito.ru"):
+                        categories["avito"] += 1
+                    elif parsed_href.scheme in ("http", "https"):
+                        categories["external"] += 1
+                    else:
+                        categories["relative"] += 1
+                except ValueError:
+                    categories["relative"] += 1
         for value in candidates:
             value = unescape(value).rstrip('.,);]')
             found = nested_listing(value)
             if found:
                 links.add(found)
-    return links, hyperlink_count
+    return links, hyperlink_count, categories
 
 def decode_imap_utf7(value):
     """Decode IMAP modified UTF-7 folder names without extra dependencies."""
@@ -154,6 +167,7 @@ def main():
         emails = 0
         candidates = set()
         hyperlinks = 0
+        categories = {"avito": 0, "external": 0, "relative": 0}
         skipped = 0
         scanned = 0
         successfully_opened = 0
@@ -182,14 +196,19 @@ def main():
                     skipped += 1
                     continue
                 emails += 1
-                found, link_count = get_listing_links(message)
+                found, link_count, per_message_categories = get_listing_links(message)
                 candidates.update(found)
                 hyperlinks += link_count
+                for category in categories:
+                    categories[category] += per_message_categories[category]
         print(f"Папок проверено: {successfully_opened}")
         print(f"Папка «Рассылки» обнаружена через IMAP: {'да' if len(folders) > 1 else 'нет'}")
         print(f"Проверено потенциальных писем за 14 дней: {scanned}")
         print(f"Писем с подтверждённым доменом отправителя: {emails}")
         print(f"HTML-ссылок внутри писем (включая служебные): {hyperlinks}")
+        print(f"Ссылок на домены Авито: {categories['avito']}")
+        print(f"Ссылок на внешние домены (возможные перенаправления): {categories['external']}")
+        print(f"Относительных ссылок: {categories['relative']}")
         print(f"Уникальных прямых ссылок с ID объявления Авито: {len(candidates)}")
         print(f"Пропущено писем: {skipped}")
         print("Предварительная проверка: актуальность объявлений и назначение писем не подтверждены.")
