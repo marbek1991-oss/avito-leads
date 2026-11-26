@@ -1,10 +1,13 @@
-name: Export Avito mail candidates (private)
+name: Sync Avito mail candidates to app
 on:
   schedule:
     - cron: '45 13 * * *'
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
+concurrency:
+  group: avito-mail-sync
+  cancel-in-progress: false
 jobs:
   export:
     runs-on: ubuntu-latest
@@ -14,15 +17,18 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Prepare private Avito candidate list
+      - name: Read saved-search notifications and export sanitized candidates
         env:
           MAILRU_EMAIL: ${{ vars.MAILRU_EMAIL }}
           MAILRU_APP_PASSWORD: ${{ secrets.MAILRU_APP_PASSWORD }}
+          MAIL_CANDIDATES_OUTPUT: mail-candidates.json
         run: python scripts/export_avito_mail.py
-      - name: Save private import file for browser
-        uses: actions/upload-artifact@v4
-        with:
-          name: avito-mail-candidates-private
-          path: /tmp/avito-mail-candidates.json
-          retention-days: 7
-          if-no-files-found: error
+      - name: Publish only listing IDs and titles (never email links or tokens)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add mail-candidates.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Update sanitized candidates from Avito mail"
+            git push
+          fi
