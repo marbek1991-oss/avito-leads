@@ -14,7 +14,7 @@ import imaplib
 import os
 import re
 import sys
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, parse_qs, unquote
 
 LISTING = re.compile(r"_[0-9]{7,}/?$")
 URLS = re.compile(r"https://[^\s<>\"']+", re.IGNORECASE)
@@ -33,8 +33,49 @@ def sender_ok(message):
     domain = sender.rpartition("@")[2]
     return domain in ALLOWED_SENDERS or domain.endswith(".avito.ru")
 
+def direct_listing(value):
+    try:
+        p = urlsplit(value)
+    except ValueError:
+        return None
+    if (p.scheme == "https"
+        and p.hostname in ("avito.ru", "www.avito.ru", "m.avito.ru")
+        and LISTING.search(p.path)):
+        return p.scheme + "://" + p.hostname + p.path
+    return None
+
+def nested_listing(value):
+    """Unwrap explicit URL-valued query parameters without visiting links."""
+    queue = [unescape(value)]
+    seen = set()
+    for _ in range(12):
+        if not queue:
+            break
+        current = queue.pop(0)
+        if current in seen or len(current) > 10000:
+            continue
+        seen.add(current)
+        found = direct_listing(current)
+        if found:
+            return found
+        try:
+            parts = urlsplit(current)
+        except ValueError:
+            continue
+        for key, values in parse_qs(parts.query).items():
+            if key.lower() in ("url", "u", "target", "redirect", "redirect_url", "link", "to", "destination", "r", "next"):
+                for candidate in values[:2]:
+                    decoded = unquote(unescape(candidate))
+                    if decoded.startswith("https://"):
+                        queue.append(decoded)
+        decoded = unquote(current)
+        if decoded != current and decoded.startswith("https://"):
+            queue.append(decoded)
+    return None
+
 def get_listing_links(message):
     links = set()
+    hyperlink_count = 0
     for part in message.walk():
         if part.is_multipart() or part.get_content_disposition() == "attachment":
             continue
@@ -53,17 +94,13 @@ def get_listing_links(message):
             parser = Hrefs()
             parser.feed(body)
             candidates += parser.links
+            hyperlink_count += len(parser.links)
         for value in candidates:
             value = unescape(value).rstrip('.,);]')
-            try:
-                parsed = urlsplit(value)
-            except ValueError:
-                continue
-            if (parsed.scheme == "https"
-                and parsed.hostname in ("avito.ru", "www.avito.ru", "m.avito.ru")
-                and LISTING.search(parsed.path)):
-                links.add(parsed.scheme + "://" + parsed.hostname + parsed.path)
-    return links
+            found = nested_listing(value)
+            if found:
+                links.add(found)
+    return links, hyperlink_count
 
 def decode_imap_utf7(value):
     """Decode IMAP modified UTF-7 folder names without extra dependencies."""
@@ -116,6 +153,7 @@ def main():
         since = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=14)).strftime("%d-%b-%Y")
         emails = 0
         candidates = set()
+        hyperlinks = 0
         skipped = 0
         scanned = 0
         successfully_opened = 0
@@ -144,11 +182,14 @@ def main():
                     skipped += 1
                     continue
                 emails += 1
-                candidates.update(get_listing_links(message))
+                found, link_count = get_listing_links(message)
+                candidates.update(found)
+                hyperlinks += link_count
         print(f"Папок проверено: {successfully_opened}")
         print(f"Папка «Рассылки» обнаружена через IMAP: {'да' if len(folders) > 1 else 'нет'}")
         print(f"Проверено потенциальных писем за 14 дней: {scanned}")
         print(f"Писем с подтверждённым доменом отправителя: {emails}")
+        print(f"HTML-ссылок внутри писем (включая служебные): {hyperlinks}")
         print(f"Уникальных прямых ссылок с ID объявления Авито: {len(candidates)}")
         print(f"Пропущено писем: {skipped}")
         print("Предварительная проверка: актуальность объявлений и назначение писем не подтверждены.")
