@@ -1,0 +1,28 @@
+name: Export Avito mail candidates (private)
+on:
+  schedule:
+    - cron: '45 13 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Prepare private Avito candidate list
+        env:
+          MAILRU_EMAIL: ${{ vars.MAILRU_EMAIL }}
+          MAILRU_APP_PASSWORD: ${{ secrets.MAILRU_APP_PASSWORD }}
+        run: python scripts/export_avito_mail.py
+      - name: Save private import file for browser
+        uses: actions/upload-artifact@v4
+        with:
+          name: avito-mail-candidates-private
+          path: /tmp/avito-mail-candidates.json
+          retention-days: 7
+          if-no-files-found: error
