@@ -264,12 +264,7 @@ $('mailCandidatesList').onclick=e=>{
   $('cardAuditDialog').showModal();return;
  }
  if(b.dataset.mailAction==='offer'){
-  const evidence=evidenceAudit(candidate);
-  const text=generateMailOffer(candidate);
-  $('messageText').value=text;
-  if(evidence.issues.length && candidate.auditDescription){
-   $('messageText').value=text+'\n\nДля себя (не отправлять как неподтверждённый факт): '+evidence.issues.join('; ');
-  }
+  $('messageText').value=generateMailOffer(candidate);
   $('messageDialog').showModal();return;
  }
  if(b.dataset.mailAction==='addlink'){
