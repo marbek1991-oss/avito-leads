@@ -474,12 +474,20 @@ function exportCandidatePdf(candidate){
   const confirmed=typeof candidate.publicUrl==='string'&&/^https:\/\/(?:www\.)?avito\.ru\//.test(candidate.publicUrl)&&new RegExp('_'+candidate.itemId+'(?:[/?#]|$)').test(candidate.publicUrl);
   const findings=specificCardFindings(candidate);
   if(findings.length<3)throw Error('Недостаточно фактов для содержательного разбора');
+  // Client-facing report: concise, concrete and free of internal notes.
+  const visibleFindings=findings.filter(f=>f.title!=='Явных текстовых проблем по заданным критериям не обнаружено').slice(0,4);
   const sections=[
-   {title:'Исходные данные и статус',items:['Название: '+candidate.name,'Получено описание ('+candidate.auditDescription.trim().length+' символов).'+(candidate.auditSource==='Расширение Chrome'?' Источник: открытая карточка Авито.':''),...(candidate.auditPrice?['Цена из карточки на момент просмотра: '+candidate.auditPrice]:[]),...(candidate.auditPhotos!==''&&candidate.auditPhotos!==null&&candidate.auditPhotos!==undefined?['Найдено видимых изображений: '+candidate.auditPhotos+' (качество фотографий не оценено).']:[]),'Это документ по тексту объявления: фотографии, поисковые позиции и статистика заявок не изучены.']},
-   ...findings.flatMap((f,i)=>[{title:(i+1)+'. '+f.title,items:['Факт из объявления: '+f.observation,'Почему это важно: '+f.impact,'Конкретное улучшение: '+f.recommendation]}]),
-   
-   {title:'Перед отправкой клиенту',items:['Сверить цитаты и выводы с действующим объявлением на Авито.','Уточнить у продавца недостающие характеристики и условия акции.','Это аудит текста, а не исследование фактической конверсии, поисковых позиций или качества фотографий.']}
+    ...visibleFindings.map((f,i)=>({
+      title:(i+1)+'. '+f.title,
+      items:[
+        'В объявлении: '+String(f.observation||'').replace(/^Из текста: /,'').replace(/^Найдено: /,'').trim(),
+        'Что предлагаю изменить: '+String(f.recommendation||'').trim()
+      ]
+    }))
   ];
+  if(!sections.length){
+    sections.push({title:'Результат разбора',items:['В описании не обнаружено конкретных текстовых недостатков, которые можно подтвердить по доступным сведениям.']});
+  }
   // Self-contained A4 JPEG-backed PDF. Text drawn by the browser's native font engine,
   // so Russian characters render without external libraries or popup windows.
   const W=1240,H=1754,L=92,R=1150,TOP=135,BOTTOM=1640;
@@ -490,10 +498,10 @@ function exportCandidatePdf(candidate){
    ctx.fillStyle='#ffffff';ctx.fillRect(0,0,W,H);
    ctx.fillStyle='#155caa';ctx.fillRect(0,0,W,21);
    ctx.fillStyle='#536b86';ctx.font='24px Arial, sans-serif';
-   ctx.fillText('АВИТО ЛИДЫ  /  КОНКРЕТНЫЙ РАЗБОР ПО ТЕКСТУ',L,82);
+   ctx.fillText('РАЗБОР ОБЪЯВЛЕНИЯ',L,82);
    ctx.fillStyle='#d8e3ef';ctx.fillRect(L,1680,R-L,2);
    ctx.fillStyle='#64748b';ctx.font='20px Arial, sans-serif';
-   ctx.fillText('Разбор по доступному описанию · данные необходимо сверить',L,1720);
+   ctx.fillText('Рекомендации по оформлению объявления',L,1720);
    y=TOP;pages.push(canvas);
   }
   function available(h){if(y+h>BOTTOM)newPage()}
@@ -531,14 +539,11 @@ function exportCandidatePdf(candidate){
    paragraph(value,{size:34,bold:true,color:'#175ea6',margin:14});
   }
   newPage();
-  paragraph(candidate.name||'Объявление Авито',{size:45,bold:true,color:'#132b4c',margin:24});
-  paragraph('Дата: '+new Date().toLocaleDateString('ru-RU')+'   ·   ID: '+candidate.itemId,{size:25,color:'#60748e'});
-  paragraph('Ниша: '+(candidate.niche||'Не определена')+'   ·   Город: '+(candidate.city||'Не определён'),{size:25});
-  if(confirmed)paragraph('Ссылка: '+candidate.publicUrl,{size:22,color:'#155caa',margin:24});
-  else paragraph('Прямая ссылка на объявление не подтверждена.',{size:22,color:'#8b6740',margin:24});
+  paragraph(candidate.name||'Объявление',{size:43,bold:true,color:'#132b4c',margin:24});
+  if(confirmed)paragraph(candidate.publicUrl,{size:19,color:'#155caa',margin:19});
   for(const sec of sections){
    heading(sec.title);
-   for(const item of sec.items||[]){paragraph('• '+item,{indent:10,size:27,margin:9})}
+   for(const item of sec.items||[]){paragraph(item,{indent:0,size:27,margin:16})}
   }
   const encoder=new TextEncoder(),chunks=[];let cursor=0;
   function put(data){
