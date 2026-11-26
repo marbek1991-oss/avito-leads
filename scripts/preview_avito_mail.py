@@ -73,8 +73,25 @@ def nested_listing(value):
             queue.append(decoded)
     return None
 
+def digest_item_id(value):
+    """Read numeric itemId only from Avito's saved-search links; discard token."""
+    try:
+        parsed = urlsplit(unescape(value))
+        if (parsed.scheme != "https"
+            or parsed.hostname not in ("avito.ru", "www.avito.ru", "m.avito.ru")
+            or not parsed.path.startswith("/autosearch/get/")):
+            return None
+        item_ids = parse_qs(parsed.query).get("itemId", [])
+        if len(item_ids) != 1:
+            return None
+        item_id = item_ids[0]
+        return item_id if re.fullmatch(r"[0-9]{7,15}", item_id) else None
+    except ValueError:
+        return None
+
 def get_listing_links(message):
     links = set()
+    digest_ids = set()
     hyperlink_count = 0
     categories = {"avito": 0, "external": 0, "relative": 0}
     for part in message.walk():
@@ -110,10 +127,13 @@ def get_listing_links(message):
                     categories["relative"] += 1
         for value in candidates:
             value = unescape(value).rstrip('.,);]')
+            digest_id = digest_item_id(value)
+            if digest_id:
+                digest_ids.add(digest_id)
             found = nested_listing(value)
             if found:
                 links.add(found)
-    return links, hyperlink_count, categories
+    return links, digest_ids, hyperlink_count, categories
 
 def decode_imap_utf7(value):
     """Decode IMAP modified UTF-7 folder names without extra dependencies."""
@@ -166,6 +186,7 @@ def main():
         since = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=14)).strftime("%d-%b-%Y")
         emails = 0
         candidates = set()
+        digest_ids = set()
         hyperlinks = 0
         categories = {"avito": 0, "external": 0, "relative": 0}
         skipped = 0
@@ -196,8 +217,9 @@ def main():
                     skipped += 1
                     continue
                 emails += 1
-                found, link_count, per_message_categories = get_listing_links(message)
+                found, found_ids, link_count, per_message_categories = get_listing_links(message)
                 candidates.update(found)
+                digest_ids.update(found_ids)
                 hyperlinks += link_count
                 for category in categories:
                     categories[category] += per_message_categories[category]
@@ -209,6 +231,7 @@ def main():
         print(f"Ссылок на домены Авито: {categories['avito']}")
         print(f"Ссылок на внешние домены (возможные перенаправления): {categories['external']}")
         print(f"Относительных ссылок: {categories['relative']}")
+        print(f"Уникальных ID объявлений из ссылок рассылки: {len(digest_ids)}")
         print(f"Уникальных прямых ссылок с ID объявления Авито: {len(candidates)}")
         print(f"Пропущено писем: {skipped}")
         print("Предварительная проверка: актуальность объявлений и назначение писем не подтверждены.")
