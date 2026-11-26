@@ -1,0 +1,767 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101827"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Авито Лиды"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><title>Авито Лиды · Клиентские PDF v3</title><style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#17233a;background:#f4f7fc;font-size:15px}*{box-sizing:border-box}body{margin:0}header{background:linear-gradient(125deg,#142b53,#1164b9);color:#fff;padding:23px 18px 28px}header .wrap{max-width:1050px;margin:auto}h1{font-size:29px;margin:2px 0 5px}h2{font-size:19px}h3{font-size:16px}p{line-height:1.5}small,.muted{color:#65748a}.intro{color:#d6e8ff;margin:0}main{max-width:1050px;margin:-14px auto 50px;padding:0 14px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat,.panel,.lead{background:white;box-shadow:0 4px 18px #1a37540d;border:1px solid #e1e8f2;border-radius:15px}.stat{padding:16px}.stat b{font-size:26px;display:block;color:#1656a3}.stat span{font-size:12px;color:#5d6e85}.panel{margin:13px 0;padding:18px}.warning{background:#fff9e9;border-left:4px solid #d5952a;padding:12px 14px;border-radius:8px;line-height:1.5}.tabs{display:flex;gap:8px;overflow:auto;margin:17px 0}.tabs button{flex:1;min-width:110px}.tab{display:none}.tab.active{display:block}button,.btn{cursor:pointer;border:0;border-radius:10px;padding:11px 15px;font-weight:650;font-size:14px;background:#e9f1fd;color:#1654a4;text-decoration:none;display:inline-block}button.primary,.btn.primary{background:#1766bf;color:#fff}button:disabled{opacity:.5;cursor:not-allowed}.buttonbar{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}label{font-size:13px;color:#344861;font-weight:650;display:flex;gap:6px;flex-direction:column}input,select,textarea{width:100%;padding:11px;border-radius:9px;border:1px solid #cfdae9;background:#fff;font:inherit;color:#16243a}textarea{min-height:85px;resize:vertical}.full{grid-column:1/-1}.lead{padding:17px;margin:10px 0}.leadhead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.lead h3{margin:0 0 5px}.tag{font-size:12px;padding:5px 8px;background:#e9f1ff;color:#145aaa;border-radius:50px;white-space:nowrap}.lead .summary{white-space:pre-wrap;line-height:1.5}.lead a{color:#0867b9;word-break:break-all}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:13px}.actions button{padding:8px 11px;font-size:12px}.hidden{display:none!important}.hint{font-size:12px;color:#68778a;margin-top:7px}.foot{font-size:12px;color:#8793a3;text-align:center;margin-top:25px}dialog{border:0;border-radius:17px;box-shadow:0 20px 70px #10233f55;width:min(690px,95vw);max-height:90vh;overflow:auto;padding:20px}dialog::backdrop{background:#07162e88}#searchLink{margin-top:8px}pre{white-space:pre-wrap;word-break:break-word}.divider{border:0;border-top:1px solid #e0e8f1;margin:18px 0}@media(max-width:600px){.formgrid{grid-template-columns:1fr}.stats{gap:6px}.stat{padding:12px}.stat b{font-size:23px}.panel{padding:14px}.tabs button{padding:10px}.leadhead{flex-direction:column}header{padding-bottom:32px}}
+
+/* Основной экран: минимум действий, технические настройки остаются доступны в дополнительных разделах. */
+#tab-mail .lead .actions .avito-open{display:inline-flex!important;align-items:center;justify-content:center;background:#1766bf!important;color:white!important;font-size:14px!important;padding:11px 15px!important;text-decoration:none!important;}
+#tab-mail>.panel:nth-of-type(2),#tab-mail>.panel:nth-of-type(4){display:none}
+#tab-mail #importMailCandidates,#tab-mail #importMailLinks,#tab-mail>.panel:first-child>.buttonbar>a.btn{display:none}
+#tab-mail #pdfDownloadDialog #pdfDownloadLink{display:block!important;visibility:visible!important;background:#1766bf!important;color:#fff!important;min-height:56px;padding:18px 20px;text-decoration:none!important}
+#tab-mail #transferLinksKey{background:#edf2f8;color:#2b527e}
+#tab-mail .lead .hint>li{margin:3px 0}
+#tab-mail .lead .actions button[data-mail-action="audit"]{display:none}
+#tab-mail .lead .actions button[data-mail-action="promote"],#tab-mail .lead .actions button[data-mail-action="remove"]{display:none}
+#tab-search,#tab-add,#tab-data{display:none!important}
+.tabs button[data-tab="add"],.tabs button[data-tab="search"],.tabs button[data-tab="data"]{display:none}
+</style></head><body><header><div class="wrap"><div style="opacity:.84;font-size:12px;letter-spacing:1px">БЕСПЛАТНАЯ ВЕРСИЯ</div><h1>Авито Лиды</h1><p class="intro">Новые объявления автоматически · приоритет · готовые сообщения</p></div></header><main><div class="stats"><div class="stat"><b id="total">0</b><span>Найдено из рассылки</span></div><div class="stat"><b id="newcnt">0</b><span>Со ссылками</span></div><div class="stat"><b id="clientcnt">0</b><span>В моей базе</span></div></div><div class="tabs"><button data-tab="leads">Моя база</button><button data-tab="add">Добавить</button><button data-tab="search">Поиск</button><button class="primary" data-tab="mail">Новые кандидаты</button><button data-tab="data">Данные</button></div>
+<section class="tab" id="tab-leads"><div class="panel"><div class="formgrid"><label>Поиск по базе<input id="filterText" placeholder="Компания, ниша, город..."></label><label>Статус<select id="filterStatus"><option value="">Все статусы</option><option>Новый</option><option>Проверен</option><option>Написал</option><option>Ответил</option><option>Переговоры</option><option>Клиент</option><option>Отказ</option></select></label></div><p class="hint">Кандидаты хранятся только в этом браузере. Для переноса на другой телефон используй экспорт и импорт.</p></div><div id="leadList"></div></section>
+<section class="tab" id="tab-add"><div class="panel"><h2 id="formTitle">Новый кандидат</h2><form id="leadForm"><input id="editingId" type="hidden"><div class="formgrid"><label>Компания / название*<input id="name" required placeholder="Название из объявления"></label><label>Город*<input id="city" required placeholder="Казань"></label><label>Ниша<select id="niche"><option>Модульные дома</option><option>Строительство бань</option><option>Бытовки / вагончики</option><option>Стройматериалы</option><option>Заборы / ворота</option><option>Наружная реклама</option><option>Другое</option></select></label><label>Статус<select id="status"><option>Новый</option><option>Проверен</option><option>Написал</option><option>Ответил</option><option>Переговоры</option><option>Клиент</option><option>Отказ</option></select></label><label class="full">Прямая ссылка Авито*<input type="url" id="url" required placeholder="https://www.avito.ru/..." pattern="https://.*"></label><label>Проверено когда?<input id="verified" type="date"></label><label>Приоритет<select id="priority"><option>Средний</option><option>Высокий</option><option>Низкий</option></select></label><label class="full">Реально замеченные недостатки<textarea id="issues" placeholder="Например: в заголовке не указана комплектация. Не придумывайте отсутствующие факты."></textarea></label><label class="full">Идеи улучшения<textarea id="recommend" placeholder="Что именно стоит поменять"></textarea></label><label class="full">Заметки<textarea id="notes" placeholder="Когда написать, ответ, контакт (по желанию)"></textarea></label></div><div class="buttonbar"><button class="primary" type="submit">Сохранить кандидата</button><button type="button" id="resetForm">Очистить форму</button></div></form></div></section>
+<section class="tab" id="tab-search"><div class="panel"><h2>Поиск потенциальных клиентов</h2><div class="warning"><b>Прямой поиск на Авито недоступен.</b> Бесплатный вариант — Google Alerts RSS с проиндексированными ссылками (подключение ниже). Актуальность объявлений не подтверждена. Кнопки ниже открывают обычную поисковую выдачу для ручной проверки.</div><div class="formgrid" style="margin-top:17px"><label>Город<select id="searchCity"><option>Москва</option><option>Санкт-Петербург</option><option>Новосибирск</option><option>Екатеринбург</option><option>Казань</option><option>Краснодар</option><option>Нижний Новгород</option><option>Челябинск</option><option>Самара</option><option>Уфа</option><option>Ростов-на-Дону</option><option>Пермь</option><option>Воронеж</option><option>Волгоград</option><option>Омск</option></select></label><label>Ниша<select id="searchNiche"><option>модульные дома</option><option>строительство бань</option><option>бытовки вагончики</option><option>строительные материалы</option><option>заборы ворота</option><option>наружная реклама</option></select></label></div><div class="buttonbar"><button class="primary" id="openSearch">Найти объявления в поиске</button><button id="openAvito">Открыть Авито</button></div><p class="hint">Режим поиска: обычная выдача поисковика по сайту avito.ru, без автоматического сбора объявлений и проверки актуальности.</p></div><div class="panel"><h2>Результаты ежедневного задания</h2><p>Если настроен разрешённый источник данных, GitHub Actions сохраняет новые ссылки в <code>candidates.json</code>. Можно забрать их в свою базу одним нажатием. <b>Импорт не подтверждает актуальность объявления.</b></p><div class="buttonbar"><button class="primary" id="syncCandidates">Загрузить новые кандидаты</button></div><p class="hint" id="syncStatus">Источник ещё не проверен</p><div class="warning" style="margin-top:12px" id="feedDiagnostics" aria-live="polite">Здесь появится дата проверки, число записей в RSS и причины отсева.</div><div id="searchDiagnostics" class="warning" style="margin-top:12px;display:none"></div><div id="feedDiagnostics" class="warning" style="margin-top:12px;display:none"></div></div><div class="panel"><h2>Несколько бесплатных Google Alerts RSS</h2><p>Ежедневное задание читает несколько RSS-лент из переменной <code>GOOGLE_ALERTS_RSS_URL</code>, удаляет повторы и добавляет до 15 новых ссылок за запуск. <b>Важно:</b> Google Alerts не гарантирует новых клиентов и не проверяет актуальность объявлений.</p><p><b>Рекомендуемые запросы для проверки:</b> <code>site:avito.ru "модульный дом"</code>, <code>site:avito.ru "баня под ключ"</code>, <code>site:avito.ru "бытовка"</code>, <code>site:avito.ru "газоблок"</code>, <code>site:avito.ru "откатные ворота"</code>, <code>site:avito.ru "световые вывески"</code>. Они могут дать более релевантную выдачу, но не гарантируют новых объявлений.</p><p>Для улучшения охвата создавай отдельные оповещения с более конкретными формулировками (по желанию меняй существующие, но не удаляй RSS-ссылки без обновления GitHub):</p><ol><li><code>site:avito.ru "модульные дома"</code></li><li><code>site:avito.ru "строительство бань"</code></li><li><code>site:avito.ru "бытовки"</code></li><li><code>site:avito.ru "строительные материалы"</code></li><li><code>site:avito.ru "заборы ворота"</code></li><li><code>site:avito.ru "наружная реклама"</code></li></ol><p>При необходимости добавь названия интересующих городов в запрос. Используй <a href="https://www.google.com/alerts" target="_blank" rel="noopener">Google Alerts</a> с доставкой «RSS-фид». В <a href="https://github.com/marbek1991-oss/avito-leads/settings/variables/actions" target="_blank" rel="noopener">GitHub Variables</a> открой <code>GOOGLE_ALERTS_RSS_URL</code> и вставь <b>URL всех RSS-лент, каждый с новой строки</b> (не XML-содержимое). Старую ссылку не удаляй, добавь новые ниже. Затем запусти <a href="https://github.com/marbek1991-oss/avito-leads/actions/workflows/import-leads.yml" target="_blank" rel="noopener">Run workflow</a> и нажми «Загрузить новые кандидаты».</p><p class="hint">Узкие формулировки вроде «строительные материалы» могут давать мало находок. Попробуй отдельные запросы: <code>site:avito.ru "газоблоки" Казань</code>, <code>site:avito.ru "баня под ключ" Уфа</code>, <code>site:avito.ru "откатные ворота" Новосибирск</code>, <code>site:avito.ru "вывески" Екатеринбург</code>. Это примеры запросов, а не найденные объявления. Попробуй также новые оповещения Google Alerts с более конкретными запросами: site:avito.ru "модульный дом"; site:avito.ru "баня под ключ"; site:avito.ru "бытовка"; site:avito.ru "газоблок"; site:avito.ru "откатные ворота"; site:avito.ru "изготовление вывесок". Не удаляй существующие оповещения без необходимости. Поиск покрывает только индекс Google, не все объявления Авито. География определяется приблизительно по адресу ссылки. Недостатки объявления не генерируются без проверки. Данные клиентов хранятся в этом браузере, резервная копия — вкладка «Данные».</p></div></section>
+<section class="tab active" id="tab-mail"><div class="panel"><h2>Новые потенциальные клиенты</h2><p>Объявления из уведомлений Авито загружаются автоматически. Сначала показаны наиболее интересные по тематике. Открой объявление и используй готовое предложение бесплатного разбора. Сообщения никому не отправляются автоматически.</p><div class="buttonbar"><button class="primary" id="syncMailCandidates">Обновить кандидатов</button><button type="button" id="transferLinksKey">Перенести ссылки на другой браузер</button><button id="importMailCandidates">Загрузить JSON вручную</button><button id="importMailLinks">Добавить ссылки из письма</button><a class="btn" href="https://github.com/marbek1991-oss/avito-leads/actions/workflows/export-avito-mail.yml" target="_blank" rel="noopener noreferrer">Получить файл в GitHub</a></div><input class="hidden" type="file" accept=".json,application/json" id="mailCandidatesInput"><input class="hidden" type="file" accept=".eml,.html,.htm,.txt,message/rfc822,text/html,text/plain" multiple id="mailLinksInput"><p class="hint">Никаких ежедневных загрузок файлов. Объявления обновляются при открытии сайта. Если ссылка недоступна, она не заменяется выдуманным адресом.</p><p class="hint" id="mailImportStatus">Автоматическая синхронизация запустится при открытии приложения. Первую выгрузку можно запустить кнопкой в GitHub.</p></div><div class="panel"><h3>Автоматическое открытие объявлений</h3><p>Один раз создай ключ в приложении, скопируй его в секрет GitHub <code>AVITO_LINKS_KEY</code> и сохрани тот же ключ в этом браузере. После этого ссылки из почты будут автоматически зашифровываться в GitHub и открываться у тебя по кнопке. Никому не отправляй ключ.</p><div class="formgrid"><label class="full">Ключ шифрования (только на этом устройстве)<input type="password" id="linksKeyInput" autocomplete="off" placeholder="Нажми «Создать ключ» или вставь сохранённый ключ"></label></div><div class="buttonbar"><button id="generateLinksKey">Создать ключ</button><button id="copyLinksKey">Копировать ключ</button><button class="primary" id="saveLinksKey">Сохранить в браузере</button><a class="btn" target="_blank" rel="noopener noreferrer" href="https://github.com/marbek1991-oss/avito-leads/settings/secrets/actions">Секреты GitHub</a></div><p class="hint" id="linksKeyStatus">Ключ хранится локально в браузере. На другом устройстве его потребуется ввести снова. Данные GitHub Pages публичны, но ссылки в них зашифрованы AES-256-GCM.</p></div><div id="linkUnlockPanel" class="panel" style="border:2px solid #d9a441;background:#fffaf0"><h3>Ссылки найдены, но пока закрыты</h3><p id="linkUnlockInfo">Ссылки зашифрованы. Чтобы открыть их на этом устройстве, нужен ранее созданный ключ.</p><div class="buttonbar"><button type="button" class="primary" id="showLinkUnlock">Восстановить ссылки</button></div><div id="linkUnlockForm" style="display:none;margin-top:12px"><label>Ключ, который ты ранее создавал для Авито Лиды<input type="password" id="quickLinksKey" autocomplete="off" placeholder="Вставь прежний ключ сюда"></label><div class="buttonbar"><button type="button" class="primary" id="applyQuickLinksKey">Открыть ссылки</button></div><p class="hint">Если в прежнем браузере ссылки уже открывались, лучше открыть сайт там: ключ хранится отдельно в каждом браузере. Если ключ потерян, нужно создать новый и заменить AVITO_LINKS_KEY в GitHub Secrets, затем снова запустить синхронизацию.</p></div></div><div class="panel"><h3>Самые интересные объявления — сверху</h3><p class="hint">Приоритет определяется по заголовку и нише. Это не проверка фотографий или описания, поэтому недостатки не выдумываются.</p><div class="formgrid"><label>Показать кандидатов<select id="mailAuditFilter"><option value="all">Все кандидаты</option><option value="priority">Приоритетные по нише</option><option value="review">Остальные</option></select></label></div><p class="hint" id="mailAuditSummary"></p></div><div class="panel"><h3>Автоматический анализ из Chrome</h3><p>Один раз установи расширение «Авито Лиды — аудит карточек» из папки <code>chrome-extension</code> репозитория. Оставь эту страницу открытой и переходи по объявлениям: расширение само передаст доступный текст карточки и количество найденных изображений. Данные сохраняются в браузере, без передачи содержимого в GitHub.</p><a class="btn" target="_blank" rel="noopener noreferrer" href="https://github.com/marbek1991-oss/avito-leads/tree/main/chrome-extension">Открыть файлы расширения</a></div><dialog id="pdfDownloadDialog"><h2>PDF-разбор готов</h2><p>Файл подготовлен для скачивания. Нажми на ссылку ниже.</p><div class="buttonbar" style="display:flex;flex-direction:column;align-items:stretch"><a id="pdfDownloadLink" download="Avito_razbor.pdf" href="#" style="display:block!important;background:#1766bf!important;color:#fff!important;font-size:18px;font-weight:700;text-align:center;padding:18px 20px;border-radius:12px;text-decoration:none;min-height:56px;width:100%">⬇ Скачать PDF</a><button type="button" id="closePdfDownload">Закрыть</button></div><p class="hint" id="pdfDownloadHint">Если встроенный браузер не скачивает файл, открой «Авито Лиды» в обычном Chrome и нажми «Разбор PDF».</p></dialog>
+<div id="mailCandidatesList"></div></section>
+<section class="tab" id="tab-data"><div class="panel"><h2>Резервная копия и перенос</h2><p>Финансовые и клиентские сведения не загружаются в GitHub. Данные этой версии находятся в хранилище браузера конкретного устройства и могут исчезнуть при его очистке.</p><div class="buttonbar"><button class="primary" id="exportJson">Скачать резервную копию JSON</button><button id="exportCsv">Экспорт CSV для Excel</button><button id="importButton">Импорт JSON / CSV</button></div><input class="hidden" type="file" accept=".json,.csv,application/json,text/csv" id="fileInput"><hr class="divider"><h3>Установка на телефон</h3><p>Опубликуй эти файлы в <b>отдельном</b> репозитории GitHub Pages, чтобы не заменить приложение «Мои финансы». В Safari: «Поделиться» → «На экран Домой». В Chrome на Android: меню ⋮ → «Добавить на главный экран».</p><div class="buttonbar"><button id="clearAll" style="color:#a32128;background:#fff0f1">Удалить все записи</button></div></div></section><p class="foot">Авито Лиды · личный менеджер кандидатов · без подключения к API Авито</p></main>
+<dialog id="cardAuditDialog"><h2>Аудит объявления по фактическим данным</h2><p class="hint">Открой объявление на Авито, скопируй видимый текст описания и укажи количество фотографий, если оно видно. Данные сохраняются только в этом браузере. Анализ не подтверждает актуальность и не проверяет сами фотографии.</p><label>Текст описания из карточки<textarea id="cardAuditDescription" style="min-height:170px" placeholder="Вставь описание из открытого объявления"></textarea></label><div class="formgrid"><label>Количество фотографий (если известно)<input id="cardAuditPhotos" type="number" min="0" max="500" placeholder="Неизвестно"></label><label>Наличие контакта / способа связи<select id="cardAuditContact"><option value="unknown">Не проверено</option><option value="yes">Есть доступный способ связи</option><option value="no">Не удалось найти</option></select></label></div><div class="buttonbar"><button class="primary" id="runCardAudit">Анализировать и сохранить</button><button id="closeCardAudit">Закрыть</button></div><p class="hint" id="cardAuditStatus"></p></dialog>
+<dialog id="messageDialog"><h2>Сообщение для бесплатного разбора</h2><p class="muted">Можно отредактировать перед отправкой. Сообщение никому не отправляется автоматически.</p><textarea id="messageText" style="min-height:170px"></textarea><div class="buttonbar"><button class="primary" id="copyMessage">Скопировать сообщение</button><button id="closeDialog">Закрыть</button></div></dialog>
+<script>
+const KEY='avito_leads_v1';let leads=[];const $=id=>document.getElementById(id);function load(){try{let v=JSON.parse(localStorage.getItem(KEY)||'[]');leads=Array.isArray(v)?v:[]}catch(e){leads=[]}}function save(){localStorage.setItem(KEY,JSON.stringify(leads))}function uid(){return (crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random())}function esc(s){return String(s??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]))}function validUrl(url){try{const a=new URL(url);return a.protocol==='https:'&&/(^|\.)avito\.ru$/i.test(a.hostname)}catch{return false}}function tabs(n){document.querySelectorAll('.tab').forEach(e=>e.classList.toggle('active',e.id==='tab-'+n));document.querySelectorAll('[data-tab]').forEach(e=>e.classList.toggle('primary',e.dataset.tab===n));window.scrollTo({top:0,behavior:'smooth'})}document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>tabs(b.dataset.tab));
+function render(){let filter=$('filterText').value.toLocaleLowerCase('ru');let status=$('filterStatus').value;$('total').textContent=mailCandidates.length;$('newcnt').textContent=mailCandidates.filter(x=>validDigestLink(x.trackingUrl,x.itemId)).length;$('clientcnt').textContent=leads.length;let selected=leads.filter(x=>(!status||x.status===status)&&[x.name,x.city,x.niche,x.issues,x.notes].join(' ').toLocaleLowerCase('ru').includes(filter));selected.sort((a,b)=>({Высокий:0,Средний:1,Низкий:2}[a.priority]??2)-({Высокий:0,Средний:1,Низкий:2}[b.priority]??2)||(b.created||'').localeCompare(a.created||''));$('leadList').innerHTML=selected.length?selected.map(x=>`<article class="lead"><div class="leadhead"><div><h3>${esc(x.name)}</h3><div class="muted">${esc(x.city)} · ${esc(x.niche)} · ${esc(x.priority)} приоритет</div></div><span class="tag">${esc(x.status)}</span></div><p><a href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">Открыть объявление ↗</a></p>${x.issues?`<p class="summary"><b>Замечено:</b> ${esc(x.issues)}</p>`:''}${x.recommend?`<p class="summary"><b>Рекомендация:</b> ${esc(x.recommend)}</p>`:''}${x.verified?`<p class="hint">Проверено пользователем: ${esc(x.verified)}</p>`:'<p class="hint">Актуальность объявления не подтверждена</p>'}${x.notes?`<p class="hint">Заметка: ${esc(x.notes)}</p>`:''}<div class="actions"><button data-action="offer" data-id="${esc(x.id)}">Сообщение</button><button data-action="edit" data-id="${esc(x.id)}">Редактировать</button><button data-action="advance" data-id="${esc(x.id)}">Следующий статус</button><button data-action="delete" data-id="${esc(x.id)}">Удалить</button></div></article>`).join(''):'<div class="panel"><h3>Пока нет кандидатов</h3><p class="muted">Добавь проверенную ссылку на объявление Авито или импортируй таблицу CSV.</p><button class="primary" onclick="tabs(&quot;add&quot;)">Добавить кандидата</button></div>'}function clearForm(){$('leadForm').reset();$('editingId').value='';$('formTitle').textContent='Новый кандидат'}$('resetForm').onclick=clearForm;$('leadForm').onsubmit=e=>{e.preventDefault();let o={id:$('editingId').value||uid(),name:$('name').value.trim(),city:$('city').value.trim(),niche:$('niche').value,status:$('status').value,url:$('url').value.trim(),verified:$('verified').value,priority:$('priority').value,issues:$('issues').value.trim(),recommend:$('recommend').value.trim(),notes:$('notes').value.trim(),created:new Date().toISOString()};if(!validUrl(o.url)){alert('Укажи настоящую прямую ссылку https://www.avito.ru/...');return}if(!o.name||!o.city){alert('Нужно указать название и город');return}let duplicate=leads.find(x=>x.url.split('?')[0]===o.url.split('?')[0]&&x.id!==o.id);if(duplicate){alert('Это объявление уже есть в базе');return}let ix=leads.findIndex(x=>x.id===o.id);if(ix>=0){o.created=leads[ix].created;leads[ix]=o}else leads.push(o);save();clearForm();render();tabs('leads')};
+$('leadList').onclick=e=>{let b=e.target.closest('button[data-action]');if(!b)return;let x=leads.find(z=>z.id===b.dataset.id);if(!x)return;switch(b.dataset.action){case 'offer':{let domain=x.niche.toLowerCase();let detail=x.issues?` Вижу, что можно отдельно посмотреть на оформление: ${x.issues.replace(/[\n\r]+/g,' ').slice(0,170).replace(/[.!? ]+$/,'')}.`:'';$('messageText').value=`Здравствуйте! Увидел ваше объявление по теме «${domain}» на Авито.${detail} Могу бесплатно сделать небольшой разбор объявления и дать конкретные рекомендации по оформлению. Вам было бы интересно?`;$('messageDialog').showModal();break}case 'edit':{clearForm();for(let k of ['name','city','niche','status','url','verified','priority','issues','recommend','notes'])$(k).value=x[k]||'';$('editingId').value=x.id;$('formTitle').textContent='Редактировать кандидата';tabs('add');break}case 'advance':{const arr=['Новый','Проверен','Написал','Ответил','Переговоры','Клиент'];let i=arr.indexOf(x.status);x.status=arr[(i+1)%arr.length];save();render();break}case 'delete':if(confirm('Удалить запись '+x.name+'?')){leads=leads.filter(z=>z.id!==x.id);save();render()}break}};
+$('copyMessage').onclick=async()=>{try{await navigator.clipboard.writeText($('messageText').value);alert('Сообщение скопировано')}catch{let t=$('messageText');t.select();document.execCommand('copy');alert('Текст выделен для копирования')}};$('closeDialog').onclick=()=>$('messageDialog').close();$('filterText').oninput=render;$('filterStatus').onchange=render;
+$('openSearch').onclick=()=>{let q=`site:avito.ru ${$('searchNiche').value} ${$('searchCity').value}`;window.open('https://www.google.com/search?q='+encodeURIComponent(q),'_blank','noopener,noreferrer')};$('openAvito').onclick=()=>window.open('https://www.avito.ru/','_blank','noopener,noreferrer');
+function download(filename,text,type){let blob=new Blob(['\ufeff'+text],{type}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),500)}$('exportJson').onclick=()=>download('avito-leads-backup.json',JSON.stringify({version:1,leads},null,2),'application/json');const headers=['name','city','niche','url','verified','priority','status','issues','recommend','notes','created'];function csvCell(v){return '"'+String(v??'').replace(/"/g,'""')+'"'}$('exportCsv').onclick=()=>download('avito-leads.csv',[headers.join(';'),...leads.map(x=>headers.map(h=>csvCell(x[h])).join(';'))].join('\r\n'),'text/csv');$('importButton').onclick=()=>$('fileInput').click();function parseCsv(t){t=t.replace(/^\ufeff/,'');let rows=[],row=[],cell='',quoted=false;let delim=t.split(/\r?\n/,1)[0].includes(';')?';':',';for(let i=0;i<t.length;i++){let c=t[i];if(c==='"'){if(quoted&&t[i+1]==='"'){cell+='"';i++}else quoted=!quoted}else if(c===delim&&!quoted){row.push(cell);cell=''}else if((c==='\n'||c==='\r')&&!quoted){if(c==='\r'&&t[i+1]==='\n')i++;row.push(cell);if(row.some(x=>x.trim()))rows.push(row);row=[];cell=''}else cell+=c}row.push(cell);if(row.some(x=>x.trim()))rows.push(row);let h=rows.shift()?.map(x=>x.trim())||[];return rows.map(r=>Object.fromEntries(h.map((key,i)=>[key,r[i]||''])))}$('fileInput').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let text=await f.text(),arr=f.name.toLowerCase().endsWith('.json')?(v=>Array.isArray(v)?v:v.leads)(JSON.parse(text)):parseCsv(text);if(!Array.isArray(arr))throw Error('В файле нет массива лидов');let added=0;for(let x of arr){if(!validUrl(x.url)||!x.name||!x.city)continue;if(leads.some(y=>y.url.split('?')[0]===x.url.split('?')[0]))continue;leads.push({...x,id:uid(),status:['Новый','Проверен','Написал','Ответил','Переговоры','Клиент','Отказ'].includes(x.status)?x.status:'Новый',priority:['Высокий','Средний','Низкий'].includes(x.priority)?x.priority:'Средний',created:x.created||new Date().toISOString()});added++}save();render();alert('Импортировано '+added+' записей. Пропущены повторы и строки без прямой ссылки Авито.')}catch(ex){alert('Не получилось прочитать файл: '+ex.message)}e.target.value=''};$('clearAll').onclick=()=>{if(confirm('Удалить ВСЕ записи на этом устройстве? Рекомендуем сначала скачать резервную копию.')){leads=[];save();render()}};$('syncCandidates').onclick=async()=>{let node=$('syncStatus');node.textContent='Проверяю файл результатов...';try{let response=await fetch('candidates.json?ts='+Date.now(),{cache:'no-store'});if(!response.ok){node.textContent='Пока нет файла результатов. Источник данных не подключён или поиск не запускался.';return}let feed=await response.json();let items=Array.isArray(feed.items)?feed.items:[];const diagnostic=$('feedDiagnostics');diagnostic.style.display='block';diagnostic.textContent='Последняя проверка: '+(feed.generated_at?new Date(feed.generated_at).toLocaleString('ru-RU'):'неизвестно')+' · RSS прочитано: '+(feed.rss_sources_ok??'?')+'/'+(feed.rss_sources_total??'?')+' · Записей в RSS: '+(feed.rss_entries_total??'нет данных')+' · Прямых ссылок Авито: '+(feed.rss_direct_links??'нет данных')+' · Новых ссылок: '+(feed.new_count??0)+' · Ошибок RSS: '+(feed.rss_errors??0);let count=0;for(let x of items){if(!x||!validUrl(x.url)||!x.name||!x.city)continue;let key=x.url.split('?')[0];if(leads.some(y=>y.url.split('?')[0]===key))continue;leads.push({id:uid(),name:String(x.name).slice(0,200),city:String(x.city).slice(0,100),niche:String(x.niche||'Другое'),status:'Новый',priority:'Средний',url:String(x.url),verified:'',issues:String(x.issues||'').slice(0,1200),recommend:String(x.recommend||'').slice(0,1200),notes:'Источник: '+String(x.source||'внешний')+'; статус проверки: '+String(x.verification||'не проверено'),created:new Date().toISOString()});count++}save();render();node.textContent='Импортировано '+count+' новых кандидатов; всего в файле '+items.length+'. Их актуальность на Авито нужно проверить вручную.';let d='Последняя проверка: '+(feed.generated_at?new Date(feed.generated_at).toLocaleString('ru-RU'):'неизвестно')+'. RSS: '+(feed.rss_sources_ok??'—')+'/'+(feed.rss_sources_total??'—')+', ошибок: '+(feed.rss_errors??'—')+', записей: '+(feed.rss_entries_total??'нет данных')+'.';if(typeof feed.rss_rejected_non_avito==='number')d+=' Отфильтровано: не Авито — '+feed.rss_rejected_non_avito+', не объявление — '+feed.rss_rejected_not_listing+', нецелевой город — '+feed.rss_rejected_city+', нецелевая ниша — '+feed.rss_rejected_niche+'.';if(feed.rss_entries_total===0)d+=' Google Alerts пока не прислал новых записей.';$('feedDiagnostics').textContent=d;let diag=$('searchDiagnostics');diag.style.display='block';let date=feed.generated_at?new Date(feed.generated_at).toLocaleString('ru-RU'):'не указана';let entries=Number(feed.rss_entries_total||0);diag.textContent='Последняя проверка: '+date+' · RSS-лент: '+Number(feed.rss_sources_ok||0)+'/'+Number(feed.rss_sources_total||0)+' · Записей Google: '+entries+' · Отклонено: не Авито '+Number(feed.rss_rejected_non_avito||0)+', не конкретное объявление или город '+Number(feed.rss_rejected_city_or_category||0)+', не подходящая ниша '+Number(feed.rss_rejected_niche||0)+'. '+(entries===0?'Google Alerts пока не передал новых записей.':'Проверь актуальность ссылок на Авито.')}catch(err){node.textContent='Не удалось загрузить результаты: '+err.message}};
+
+const MAIL_KEY='avito_mail_candidates_v1';
+let mailCandidates=[];
+function loadMailCandidates(){try{let v=JSON.parse(localStorage.getItem(MAIL_KEY)||'[]');mailCandidates=Array.isArray(v)?v:[]}catch{mailCandidates=[]}}
+function saveMailCandidates(){localStorage.setItem(MAIL_KEY,JSON.stringify(mailCandidates))}
+
+function validDigestLink(value,id){
+ if(typeof value!=='string'||value.length>5000||!/^[0-9]{7,15}$/.test(String(id||'')))return false;
+ try{
+  const url=new URL(value);
+  return url.protocol==='https:'&&['avito.ru','www.avito.ru','m.avito.ru'].includes(url.hostname)&&url.pathname.startsWith('/autosearch/get/')&&url.searchParams.get('itemId')===String(id);
+ }catch{return false}
+}
+function parseEmailHtml(html){
+ const doc=new DOMParser().parseFromString(html,'text/html'),result=new Map();
+ doc.querySelectorAll('a[href]').forEach(a=>{
+  const link=a.getAttribute('href');
+  if(!link)return;
+  try{
+   const id=new URL(link).searchParams.get('itemId');
+   if(validDigestLink(link,id))result.set(id,link);
+  }catch{}
+ });
+ return result;
+}
+function decodeQuotedPrintable(value){
+ const input=value.replace(/=\r?\n/g,'');
+ const bytes=[];
+ for(let i=0;i<input.length;i++){
+  if(input[i]==='='&&/^[0-9a-fA-F]{2}$/.test(input.slice(i+1,i+3))){bytes.push(parseInt(input.slice(i+1,i+3),16));i+=2;}
+  else {const char=input.charCodeAt(i);bytes.push(char<256?char:63);}
+ }
+ return new TextDecoder('utf-8').decode(new Uint8Array(bytes));
+}
+function extractHtmlFromLocalFile(raw){
+ const versions=[raw];
+ if(/Content-Transfer-Encoding:\s*quoted-printable/i.test(raw))versions.push(decodeQuotedPrintable(raw));
+ const blocks=[...raw.matchAll(/Content-Type:\s*text\/html\b[^\r\n]*(?:\r?\n[ \t]+[^\r\n]*)*\r?\n(?:[^\r\n]*\r?\n)*?\r?\n([\s\S]*?)(?=\r?\n--[-_a-zA-Z0-9=]+(?:--)?\r?\n|$)/gi)];
+ for(const block of blocks){
+  const region=block[0],body=block[1];
+  if(/Content-Transfer-Encoding:\s*base64/i.test(region)){
+   try{const data=atob(body.replace(/\s/g,'')),bytes=Uint8Array.from(data,c=>c.charCodeAt(0));versions.push(new TextDecoder('utf-8').decode(bytes))}catch{}
+  }else if(/Content-Transfer-Encoding:\s*quoted-printable/i.test(region))versions.push(decodeQuotedPrintable(body));
+  else versions.push(body);
+ }
+ return versions;
+}
+$('importMailLinks').onclick=()=>$('mailLinksInput').click();
+$('mailLinksInput').onchange=async e=>{
+ let linked=0;
+ for(const file of [...e.target.files].slice(0,20)){
+  if(file.size>4000000)continue;
+  const text=await file.text();
+  for(const part of extractHtmlFromLocalFile(text)){
+   const refs=parseEmailHtml(part);
+   for(const candidate of mailCandidates){
+    const url=refs.get(candidate.itemId);
+    if(url&&validDigestLink(url,candidate.itemId)){if(candidate.trackingUrl!==url){candidate.trackingUrl=url;linked++}}
+   }
+  }
+ }
+ saveMailCandidates();renderMailCandidates();
+ $('mailImportStatus').textContent='Ссылок из писем привязано: '+linked+'. Данные сохранены только в этом браузере. Если 0 — попробуй сохранить письмо как HTML или EML.';
+ e.target.value='';
+};
+
+
+
+const LINKS_KEY_STORAGE='avito_links_aes256_key_v1';
+function linksKey(){
+ return localStorage.getItem(LINKS_KEY_STORAGE)||'';
+}
+function base64bytes(value){
+ const b=atob(value);return Uint8Array.from(b,c=>c.charCodeAt(0));
+}
+function validEncryptionKey(value){
+ try{return base64bytes(value).length===32 && /^[A-Za-z0-9+/]+={0,2}$/.test(value)}catch{return false}
+}
+async function decryptAvitoLink(cipherText,id,keyString){
+ if(!cipherText||!validEncryptionKey(keyString))return '';
+ try{
+  const bytes=base64bytes(cipherText);
+  if(bytes.length<29)return '';
+  const key=await crypto.subtle.importKey('raw',base64bytes(keyString),'AES-GCM',false,['decrypt']);
+  const content=await crypto.subtle.decrypt({name:'AES-GCM',iv:bytes.slice(0,12),additionalData:new TextEncoder().encode(id),tagLength:128},key,bytes.slice(12));
+  const link=new TextDecoder().decode(content);
+  return validDigestLink(link,id)?link:'';
+ }catch{return ''}
+}
+$('linksKeyInput').value=linksKey();
+$('linksKeyStatus').textContent=linksKey()?'Ключ сохранён на этом устройстве. Добавь тот же ключ в GitHub Secret AVITO_LINKS_KEY, затем запусти экспорт.':'Ключ ещё не настроен. Создай и сохрани его здесь, затем скопируй в GitHub Secret AVITO_LINKS_KEY.';
+$('generateLinksKey').onclick=()=>{
+ const bytes=crypto.getRandomValues(new Uint8Array(32));
+ $('linksKeyInput').value=btoa(String.fromCharCode(...bytes));
+ $('linksKeyStatus').textContent='Ключ создан. Скопируй его в GitHub Secret AVITO_LINKS_KEY, затем нажми «Сохранить в браузере».';
+};
+$('copyLinksKey').onclick=async()=>{
+ const v=$('linksKeyInput').value.trim();
+ if(!validEncryptionKey(v)){alert('Сначала создай или вставь корректный ключ.');return}
+ try{await navigator.clipboard.writeText(v);$('linksKeyStatus').textContent='Ключ скопирован. Вставь его в GitHub Secret AVITO_LINKS_KEY. Никому не отправляй.'}
+ catch{const i=$('linksKeyInput');i.type='text';i.select();alert('Скопируй выделенный ключ, затем скрой его.')}
+};
+$('saveLinksKey').onclick=async()=>{
+ const v=$('linksKeyInput').value.trim();
+ if(!validEncryptionKey(v)){alert('Нужен ключ из 32 случайных байтов (Base64).');return}
+ localStorage.setItem(LINKS_KEY_STORAGE,v);
+ $('linksKeyStatus').textContent='Ключ сохранён только в этом браузере. Убедись, что он также сохранён в GitHub Secret AVITO_LINKS_KEY.';
+ await syncMailCandidates();
+};
+
+function refreshLinkUnlockPanel(encryptedCount,unlockedCount){
+ const panel=$('linkUnlockPanel');if(!panel)return;
+ const available=mailCandidates.filter(x=>validDigestLink(x.trackingUrl,x.itemId)||typeof x.publicUrl==='string'&&/^https:\/\/(?:www\.)?avito\.ru\//.test(x.publicUrl)&&new RegExp('_'+x.itemId+'(?:[/?#]|$)').test(x.publicUrl)).length;
+ panel.style.display=available>=mailCandidates.length&&mailCandidates.length>0?'none':'block';
+ const info=$('linkUnlockInfo');if(info)info.textContent='В ежедневной выгрузке зашифровано ссылок: '+encryptedCount+'. Доступно на этом устройстве: '+available+'. '+(linksKey()?'Если ссылки не открываются, сохранённый ключ может не подходить к текущей выгрузке.':'В этом браузере нет ключа расшифровки. Открой сайт в браузере, где ссылки работали, чтобы скопировать ключ.');
+}
+$('showLinkUnlock').onclick=()=>{$('linkUnlockForm').style.display='block';$('quickLinksKey').focus();};
+$('transferLinksKey').onclick=async()=>{
+ const key=linksKey();
+ if(!validEncryptionKey(key)){alert('В этом браузере ключ не найден. Открой Авито Лиды там, где ссылки раньше работали, и нажми «Перенести ссылки на другой браузер».');return}
+ try{
+  await navigator.clipboard.writeText(key);
+  alert('Ключ доступа скопирован. Перейди в другой браузер → Авито Лиды → «Восстановить ссылки» → вставь ключ. Не отправляй его другим людям.');
+ }catch{
+  $('linkUnlockPanel').style.display='block';
+  $('linkUnlockForm').style.display='block';
+  $('quickLinksKey').type='text';
+  $('quickLinksKey').value=key;
+  $('quickLinksKey').select();
+  alert('Скопируй выделенный ключ. Не пересылай его никому.');
+ }
+};
+$('applyQuickLinksKey').onclick=async()=>{
+ const key=$('quickLinksKey').value.trim();
+ if(!validEncryptionKey(key)){alert('Нужен ранее созданный ключ шифрования из Авито Лиды.');return}
+ // First check the key against published ciphertext; don't overwrite a working key with an unrelated one.
+ try{
+  const response=await fetch('mail-candidates.json?keycheck='+Date.now(),{cache:'no-store'});
+  if(!response.ok)throw Error('Нет доступа к выгрузке');
+  const data=await response.json();
+  const example=(data.items||[]).find(x=>x.linkCipher);
+  if(!example)throw Error('В выгрузке пока нет зашифрованных ссылок');
+  const verified=await decryptAvitoLink(example.linkCipher,String(example.itemId),key);
+  if(!verified){alert('Этот ключ не подходит к ссылкам из текущей рассылки. Нужен тот же ключ, что сохранён в GitHub Secret AVITO_LINKS_KEY.');return}
+  localStorage.setItem(LINKS_KEY_STORAGE,key);
+  $('linksKeyInput').value=key;
+  $('quickLinksKey').value='';
+  await syncMailCandidates();
+  $('linkUnlockForm').style.display='none';
+ }catch(err){alert('Не удалось проверить ключ: '+err.message)}
+};
+
+async function syncMailCandidates(){
+ const status=$('mailImportStatus');
+ status.textContent='Синхронизирую кандидатов из почты…';
+ try{
+  const response=await fetch('mail-candidates.json?ts='+Date.now(),{cache:'no-store'});
+  if(!response.ok){status.textContent='Первая автоматическая выгрузка ещё не выполнена. В GitHub запусти Sync Avito mail candidates to app → Run workflow.';return}
+  const feed=await response.json();
+  if(feed.format!=='avito-mail-candidates-v1'||!Array.isArray(feed.items))throw Error('Неверный формат списка');
+  const map=new Map(mailCandidates.map(x=>[x.itemId,x]));
+  let added=0,unlocked=0;
+  const encryptedCount=feed.items.filter(x=>typeof x.linkCipher==='string').length;
+  const key=linksKey();
+  for(const item of feed.items.slice(0,500)){
+   const id=String(item.itemId||'').trim();
+   if(!/^[0-9]{7,15}$/.test(id))continue;
+   let entry=map.get(id);
+   if(!entry){
+    entry={itemId:id,name:String(item.name||'Объявление Авито').slice(0,200),city:String(item.city||'Не определён').slice(0,100),niche:String(item.niche||'Другое').slice(0,100)};
+    mailCandidates.push(entry);map.set(id,entry);added++;
+   }
+   if(typeof item.linkCipher==='string' && key){
+    const plain=await decryptAvitoLink(item.linkCipher,id,key);
+    if(plain && entry.trackingUrl!==plain){entry.trackingUrl=plain;unlocked++}
+   }
+  }
+  saveMailCandidates();renderMailCandidates();render();refreshLinkUnlockPanel(encryptedCount,unlocked);
+  const date=feed.created_at?new Date(feed.created_at).toLocaleString('ru-RU'):'дата неизвестна';
+  const available=mailCandidates.filter(x=>validDigestLink(x.trackingUrl,x.itemId)).length;
+  status.textContent='Синхронизация: '+date+' · Объявлений: '+feed.items.length+' · Зашифрованных ссылок: '+encryptedCount+' · Доступных в этом браузере: '+available+'.'+(encryptedCount&&available===0?' Нажми «Восстановить ссылки» под карточками.':'');
+ }catch(e){status.textContent='Не удалось синхронизировать: '+e.message}
+}
+$('syncMailCandidates').onclick=syncMailCandidates;
+
+
+function analyzeMailCandidate(x){
+ const title=String(x.name||'').trim();
+ const lower=title.toLocaleLowerCase('ru');
+ const reasons=[];
+ let points=0;
+ const strong=/модульн|строительств|бан[ьяи]|бытовк|вагончик|газоблок|кирпич|ворот|забор|вывеск|фасад|кровл|утеплен|дом под ключ|домокомплект|сруб|контейнер/i;
+ const weakGeneric=/^(услуги|стройка|ремонт|строительство|дома|работы|материалы|бани|заборы|бытовки)$/i;
+ if(strong.test(lower)){points+=2;reasons.push('Название относится к строительной или другой целевой нише')}
+ if(/\b(под ключ|изготовление|строительство|монтаж|установка|производство)\b/i.test(lower)){points+=2;reasons.push('В названии есть услуга с потенциально высоким чеком')}
+ if(/\b\d{2,}\s*(?:₽|руб|тыс)/i.test(lower)){points+=1;reasons.push('В названии указана цена')}
+ if(/^(?:дачный|модульный|каркасный)\s+дом/i.test(lower)){points+=1;reasons.push('Название содержит конкретный тип продукта')}
+ if(weakGeneric.test(lower)){reasons.push('Заголовок слишком общий — проверь его информативность')}
+ if(title.length<20){reasons.push('Короткий заголовок — проверь, хватает ли конкретики')}
+ if(!reasons.length)reasons.push('Недостаточно данных для предварительной классификации');
+ const tier=points>=4?'Приоритетный':points>=2?'Подходит по нише':'Требует просмотра';
+ return {points,tier,reasons,needsReview:true};
+}
+function generateMailOffer(x){
+ // Stable per-listing message: no random changes on every copy and no unverified claims.
+ const id=String(x.itemId||x.id||x.name||'');
+ let hash=2166136261;
+ for(let i=0;i<id.length;i++){hash=Math.imul(hash^id.charCodeAt(i),16777619)}
+ const seed=hash>>>0;
+ const choose=(arr,offset=0)=>arr[(seed+offset)%arr.length];
+ const name=String(x.name||'').replace(/\s+/g,' ').trim().slice(0,100);
+ const title=name&&name!=='Объявление Авито'?'«'+name+'»':'ваше объявление';
+ const niche=String(x.niche||'').toLocaleLowerCase('ru');
+ let angle=[
+   'как сделать предложение понятнее покупателю',
+   'какие детали стоит показать в карточке',
+   'что можно улучшить в подаче услуги',
+   'как лучше раскрыть преимущества предложения',
+   'насколько удобно покупателю разобраться в условиях',
+   'что можно усилить в тексте и структуре карточки',
+   'какую информацию покупатели ожидают увидеть до обращения',
+   'какие вопросы у клиента может вызвать объявление'
+ ];
+ if(/модульн|дом/.test(niche))angle=[
+   'насколько понятно раскрыты комплектация и условия строительства',
+   'как показать различия между вариантами домов',
+   'какие характеристики дома покупатель хочет узнать заранее',
+   'как понятнее представить сроки и состав работ'
+ ];
+ else if(/бан/.test(niche))angle=[
+   'как нагляднее представить комплектацию бани',
+   'какие детали материалов и монтажа стоит раскрыть',
+   'насколько понятно покупателю, что входит в стоимость',
+   'как показать варианты исполнения бани'
+ ];
+ else if(/бытов|вагон/.test(niche))angle=[
+   'как лучше описать размеры и оснащение бытовки',
+   'что важно указать о доставке и установке',
+   'как сделать понятнее варианты комплектации',
+   'какие характеристики стоит вынести на первый план'
+ ];
+ else if(/стройматериал/.test(niche))angle=[
+   'как нагляднее показать ассортимент и характеристики',
+   'что покупателю важно знать об объёмах и доставке',
+   'как понятнее изложить условия заказа материалов',
+   'какие параметры материала стоит выделить'
+ ];
+ else if(/забор|ворот/.test(niche))angle=[
+   'как яснее показать варианты исполнения и монтажа',
+   'что покупателю важно узнать о материалах и размерах',
+   'как представить этапы изготовления и установки',
+   'какие детали заказа лучше уточнить в карточке'
+ ];
+ else if(/реклам/.test(niche))angle=[
+   'как представить виды вывесок и варианты исполнения',
+   'что заказчику важно знать о материалах и монтаже',
+   'как показать примеры работ и условия изготовления',
+   'как понятнее объяснить состав услуги'
+ ];
+ else if(/строител/.test(niche))angle=[
+   'как понятнее раскрыть состав строительных работ',
+   'какие этапы и условия стоит пояснить заказчику',
+   'как показать особенности выполнения заказа',
+   'насколько подробно описаны сроки и результат'
+ ];
+ const openings=[
+  'Здравствуйте! Обратил внимание на ваше объявление '+title+'.',
+  'Добрый день! Увидел на Авито предложение '+title+'.',
+  'Здравствуйте! Наткнулся на ваше объявление '+title+' и решил написать.',
+  'Добрый день! Меня заинтересовало объявление '+title+'.',
+  'Здравствуйте! Нашёл на Авито вашу публикацию '+title+'.',
+  'Добрый день! Посмотрел название вашего объявления '+title+'.',
+  'Здравствуйте! Заметил ваше предложение '+title+' на Авито.',
+  'Добрый день! Увидел ваше объявление '+title+' в поиске Авито.'
+ ];
+ const bodies=[
+  'Я занимаюсь разбором объявлений Авито. Могу бесплатно посмотреть, '+choose(angle,1)+', и прислать короткие рекомендации.',
+  'Помогаю улучшать оформление объявлений. Предлагаю бесплатный мини-разбор: посмотрю, '+choose(angle,2)+', и поделюсь идеями.',
+  'Работаю с объявлениями на Авито. Если полезно, сделаю небольшой бесплатный разбор — оценю, '+choose(angle,3)+'.',
+  'Могу без оплаты разобрать ваше объявление с точки зрения покупателя: '+choose(angle,0)+'. Пришлю конкретные предложения, если найду что улучшить.',
+  'Предлагаю бесплатно оценить подачу объявления: '+choose(angle,1)+'. Если увижу точки роста, коротко опишу их.',
+  'Занимаюсь оформлением объявлений. Готов бесплатно посмотреть, '+choose(angle,2)+', и поделиться наблюдениями.',
+  'Есть предложение: без оплаты проведу небольшой разбор карточки и проверю, '+choose(angle,3)+'.',
+  'Могу бесплатно взглянуть на объявление как потенциальный покупатель и подсказать, '+choose(angle,0)+'.'
+ ];
+ const endings=[
+  'Вам было бы интересно?',
+  'Могу прислать такой разбор?',
+  'Если это актуально, напишите — подготовлю.',
+  'Хотите, посмотрю подробнее?',
+  'Удобно будет получить пару рекомендаций?',
+  'Могу сделать для вас такой разбор?',
+  'Если интересно, дайте знать.',
+  'Рассмотреть для вас несколько идей?'
+ ];
+ return [choose(openings),choose(bodies,3),choose(endings,5)].join('\n\n');
+}
+
+let activeAuditId='';
+function evidenceAudit(candidate){
+ const raw=String(candidate.auditDescription||'').trim();
+ const issues=[];
+ const strengths=[];
+ if(!raw)return {issues:[],strengths:[],state:'Нет текста карточки'};
+ const length=raw.length;
+ if(length<120)issues.push('В предоставленном описании менее 120 символов — возможно, недостаточно деталей');
+ else strengths.push('Описание содержит '+length+' символов');
+ const cues=[[/размер|габарит|м²|м2|метр|ширин|длин|высот/i,'Размеры и характеристики'],[/материал|металл|дерево|брус|каркас|бетон|сталь|толщин/i,'Материалы и комплектация'],[/доставк|монтаж|установк|срок|дней|недел/i,'Условия и сроки'],[/гарант|договор/i,'Гарантия и договор']];
+ for(const [re,label] of cues){if(re.test(raw))strengths.push('Упомянуты: '+label.toLowerCase())}
+ const photo=String(candidate.auditPhotos??'');
+ if(photo==='0')issues.push('По указанным данным фотографий нет');
+ if(photo!==''&&Number(photo)>0&&Number(photo)<3)issues.push('Указано менее трёх фотографий — стоит проверить достаточность визуального ряда');
+ if(photo!==''&&Number(photo)>=3)strengths.push('Указано фотографий: '+photo+' (качество не проверялось)');
+ if(candidate.auditContact==='no')issues.push('При проверке не удалось найти способ связи с продавцом');
+ return {issues,strengths,state:'Оценка по предоставленному тексту и отмеченным фактам'};
+}
+$('closeCardAudit').onclick=()=>$('cardAuditDialog').close();
+$('runCardAudit').onclick=()=>{
+ const c=mailCandidates.find(x=>x.itemId===activeAuditId);if(!c)return;
+ const description=$('cardAuditDescription').value.trim();
+ if(description.length<100){$('cardAuditStatus').textContent='Для содержательного PDF необходимо не менее 100 символов фактического описания объявления.';return}
+ c.auditDescription=description.slice(0,20000);
+ const photos=$('cardAuditPhotos').value;
+ c.auditPhotos=photos===''?'':Math.min(500,Math.max(0,Number(photos)));
+ c.auditContact=$('cardAuditContact').value;
+ c.auditDate=new Date().toISOString();
+ saveMailCandidates();renderMailCandidates();$('cardAuditDialog').close();
+};
+
+document.getElementById('closePdfDownload').onclick=()=>document.getElementById('pdfDownloadDialog').close();
+
+function specificCardFindings(c){
+ const raw=String(c.auditDescription||'').replace(/\s+/g,' ').trim();
+ if(raw.length<120)return [];
+ const name=String(c.name||'Объявление').replace(/\s+/g,' ').trim();
+ const lower=raw.toLocaleLowerCase('ru');
+ const findings=[];
+ const seen=new Set();
+ const extract=(regex,span=95)=>{
+  const hit=regex.exec(raw);
+  if(!hit)return '';
+  const start=Math.max(0,hit.index-35);
+  const end=Math.min(raw.length,hit.index+hit[0].length+span);
+  return (start?'…':'')+raw.slice(start,end).trim()+(end<raw.length?'…':'');
+ };
+ const add=(key,title,observation,impact,recommendation)=>{
+  if(seen.has(key))return;seen.add(key);
+  findings.push({title,observation,impact,recommendation});
+ };
+ const area=(raw.match(/\b\d+(?:[.,]\d+)?\s*(?:м²|м2|кв\.?\s*м)\b/i)||[])[0]||'';
+ const category=/модульн|дом/.test(name.toLowerCase())?'модульного дома':/бан[ьяи]/.test(name.toLowerCase())?'бани':/бытов|вагон/.test(name.toLowerCase())?'бытовки':'предложения';
+ if(area&&!name.includes(area)){
+  add('title','Заголовок можно сделать точнее','Название: «'+name+'». В описании указана площадь '+area+'.','Характеристика уже подтверждена текстом и может помочь покупателю быстрее понять, о каком варианте речь.','Вариант: «'+name.replace(/\s*\/\s*/g,' — ')+' — '+area+'». Не добавлять неподтверждённые характеристики.');
+ }
+ const first=raw.slice(0,350);
+ const promotion=/скидк|акци|успей|только сегодня|только до конца|пиши(?:те)?\s*[«"']?[А-ЯЁ]{2,}/i;
+ if(promotion.test(first)){
+  add('promo','Рекламный призыв стоит перенести после характеристик',
+    'Начало описания: «'+first.slice(0,245)+(first.length>245?'…':'')+'».',
+    'Первые строки заняты акцией или призывом. Покупатель может не увидеть площадь, комплектацию и другие ключевые сведения о '+category+'.',
+    'Начать с фактов о товаре или услуге. Информацию об акции вынести в отдельный блок «Акция» после характеристик. Существующие обещания сохранить только при подтверждении условий.');
+ }
+ const urgency=/\b(?:за\s*)?(\d+)\s*[-–—]\s*(\d+)\s*(?:дн(?:я|ей|ь)|сут(?:ки|ок)|час(?:а|ов)?)/i;
+ const shortTime=/\b(?:за\s*)(\d+)\s*(?:дн(?:я|ей|ь)|сут(?:ки|ок))\b/i;
+ const time=urgency.exec(raw)||shortTime.exec(raw);
+ if(time){
+  const window=raw.slice(Math.max(0,time.index-45),Math.min(raw.length,time.index+time[0].length+18));
+  if(!/монтаж|установк|сборк|доставк|изготовлен|производств/i.test(window)){
+   add('time','Неясно, что входит в заявленный срок',
+    'В объявлении написано: «'+extract(urgency.test(raw)?/\b(?:за\s*)?\d+\s*[-–—]\s*\d+\s*(?:дн(?:я|ей|ь)|сут(?:ки|ок)|час(?:а|ов)?)/i:/\bза\s*\d+\s*(?:дн(?:я|ей|ь)|сут(?:ки|ок))\b/i,65)+'».',
+    'Покупатель может понять это как срок изготовления дома, хотя речь может идти лишь об установке готового модуля.',
+    'Уточнить у продавца и заменить на конкретную формулировку: «[монтаж/сборка/доставка] занимает '+time[0].replace(/^\s*за\s*/i,'')+' после [условие]». Пока этап не подтверждён, готовое обещание добавлять нельзя.');
+  }
+ }
+ const discount=/скидк[аиуыек]{0,3}[^.!?\n]{0,70}?(?:до\s*)?(\d{1,2})\s*%/i.exec(raw);
+ if(discount){
+  add('discount','Скидке нужны проверяемые условия',
+   'Формулировка: «'+extract(/скидк[аиуыек]{0,3}[^.!?\n]{0,70}?(?:до\s*)?\d{1,2}\s*%/i,40)+'».',
+   'Фраза «до '+discount[1]+'%» без списка моделей и исходной цены не позволяет оценить реальную выгоду.',
+   'Добавить только подтверждённые условия: «Скидка '+discount[1]+'% / до '+discount[1]+'% действует на [конкретные модели] до [подтверждённая дата]; обычная цена [сумма], цена по акции [сумма]». Если данных нет, не выдавать это за действующую акцию.');
+ }
+ const deadline=/до\s+конца\s+(?:недел|месяц)|только\s+сегодня|акци[яи]\s+до\b/i;
+ if(deadline.test(raw)){
+  add('deadline','Срок акции сформулирован относительно даты просмотра',
+   'Найдено: «'+extract(deadline,50)+'».',
+   'Фраза «до конца недели» быстро устаревает и не даёт покупателю точной даты окончания.',
+   'Если срок действительно ограничен, написать конкретную дату по подтверждённым правилам акции; не добавлять её автоматически.');
+ }
+ const afterPay=/без\s+предоплат|не\s+бер[её]м\s+предоплат|оплат[аиы]\s+после\s+(?:установк|монтаж|сборк)/i;
+ if(afterPay.test(raw)){
+  add('pay','Сильное преимущество: оплата после установки',
+    'Из текста: «'+extract(afterPay,70)+'».',
+    'Оплата после установки снижает опасения покупателя. Это преимущество полезнее подчеркнуть рядом с условиями заказа, чем прятать среди рекламных призывов.',
+    'Если условия действуют для выбранной модели, вынести отдельной строкой: «Оплата после установки дома». Далее объяснить, что считается завершённой установкой и есть ли договор.');
+ }
+ const warranty=/гаранти[яюи][^.!?\n]{0,40}?(?:\d+\s*(?:год(?:а)?|лет|месяц(?:ев|а)?))/i.exec(raw);
+ if(warranty){
+  add('warranty','Сильное преимущество: гарантия',
+    'В тексте заявлено: «'+extract(/гаранти[яюи][^.!?\n]{0,40}?\d+\s*(?:год(?:а)?|лет|месяц(?:ев|а)?)/i,50)+'».',
+    'Гарантийный срок повышает доверие, но без перечня работ и исключений покупатель не знает, что именно защищено.',
+    'Выделить в описании блок «Гарантия»: срок из объявления, перечень покрываемых работ и порядок обращения. Детали запрашивать у продавца, не придумывать.');
+ }
+ const emojiCount=(raw.match(/[\u{1F300}-\u{1FAFF}]/gu)||[]).length;
+ const caps=(raw.match(/[А-ЯЁ]{5,}/g)||[]).length;
+ if(emojiCount>=6||caps>=8){
+  add('format','Перегруженное оформление текста',
+   'В описании найдено '+emojiCount+' эмодзи и '+caps+' слов с пятью и более заглавными буквами.',
+   'Частые эмодзи и прописные буквы затрудняют быстрое чтение технической информации.',
+   'Оставить короткие подзаголовки «Характеристики», «Условия», «Оплата», «Гарантия». Убрать повторяющиеся декоративные значки и капслок, сохранив проверенные факты.');
+ }
+ const features=[
+  {label:'размеры и площадь',re:/\b\d+(?:[.,]\d+)?\s*(?:м²|м2|кв\.?\s*м)\b|размер|площад/i},
+  {label:'комплектация и материалы',re:/комплектац|каркас|утепл|стен|кровл|фундамент|отделк|материал/i},
+  {label:'стоимость',re:/₽|руб|стоимост|цен/i},
+  {label:'доставка и монтаж',re:/достав|монтаж|сборк|установк/i}
+ ];
+ const missing=features.filter(x=>!x.re.test(raw)).map(x=>x.label);
+ if(missing.length){
+  add('missing','Что стоит дополнительно уточнить в карточке',
+   'В полученном тексте не найдены явные сведения: '+missing.join(', ')+'.',
+   'Они могут быть указаны в специальных полях Авито или на фотографиях; отсутствие в тексте не доказывает их отсутствия вообще.',
+   'Проверить, есть ли эти сведения в карточке. Если нет — дополнить описание только подтверждёнными данными: '+missing.join('; ')+'.');
+ }
+ if(!findings.length){
+  add('none','Явных текстовых проблем по заданным критериям не обнаружено',
+   'В распоряжении есть описание объёмом '+raw.length+' символов.',
+   'Невозможно обоснованно назвать его слабым только на основании наличия ключевых слов.',
+   'Для более точного аудита нужны реальные фотографии, цена, условия сделки и, по возможности, результаты объявления.');
+ }
+ return findings.slice(0,9);
+}
+function exportCandidatePdf(candidate){
+ if(String(candidate.auditDescription||'').trim().length<100){
+  activeAuditId=candidate.itemId;
+  $('cardAuditDescription').value=candidate.auditDescription||'';
+  $('cardAuditPhotos').value=candidate.auditPhotos??'';
+  $('cardAuditContact').value=candidate.auditContact||'unknown';
+  $('cardAuditStatus').textContent='Полный разбор нельзя составить только по заголовку из рассылки. Описание объявления не получено. Открой объявление и вставь здесь реальный текст, чтобы PDF содержал конкретные фрагменты, замечания и примеры улучшений. Без исходного текста PDF не создаётся.';
+  $('cardAuditDialog').showModal();
+  return;
+ }
+ try{
+  const confirmed=typeof candidate.publicUrl==='string'&&/^https:\/\/(?:www\.)?avito\.ru\//.test(candidate.publicUrl)&&new RegExp('_'+candidate.itemId+'(?:[/?#]|$)').test(candidate.publicUrl);
+  const findings=specificCardFindings(candidate);
+  if(!findings.length)throw Error('Нет конкретных наблюдений для разбора');
+  // AUDIT PRO V3: client presentation. No invented performance metrics, photos or terms.
+  const raw=String(candidate.auditDescription||'').replace(/\s+/g,' ').trim();
+  const title=String(candidate.name||'Объявление').trim();
+  const category=/модульн|дом/.test((title+' '+candidate.niche).toLowerCase())?'Модульный дом':/бан[ьяи]/i.test(title+' '+candidate.niche)?'Баня':/бытов|вагон/i.test(title+' '+candidate.niche)?'Бытовка':title.replace(/\s*\/\s*/g,' — ');
+  const area=(raw.match(/\b\d+(?:[.,]\d+)?\s*(?:м²|м2|кв\.?\s*м)\b/i)||[])[0]||'';
+  const payment=/не\s+бер[её]м\s+предоплат|оплат[аиы]\s+после\s+установк|без\s+предоплат/i.test(raw);
+  const warranty=(raw.match(/гаранти[яюи][^.!?\n]{0,40}?\d+\s*(?:год(?:а)?|лет|месяц(?:ев|а)?)/i)||[])[0]||'';
+  const shortTime=(raw.match(/(?:за\s*)?\d+\s*[-–—]\s*\d+\s*дн(?:я|ей|ь)/i)||[])[0]||'';
+  const discount=(raw.match(/скидк[аиуыек]*[^.!?\n]{0,60}?\d{1,2}\s*%/i)||[])[0]||'';
+  const hasUrgent=/(?:только\s+до\s+конца|только\s+сегодня)/i.test(raw);
+  const highImpact=findings.filter(f=>!/^Сильное преимущество|^Явных текстовых/.test(f.title));
+  const hasIssue=(term)=>highImpact.some(f=>term.test(f.title));
+  const improvedTitle=(category+(area?' '+area:'')+(/под ключ/i.test(title)?' под ключ':'')).slice(0,110);
+  const benefits=[];
+  if(payment)benefits.push('Оплата после установки — заявлена в объявлении.');
+  if(warranty)benefits.push('Гарантия — заявлена в объявлении: '+warranty.toLowerCase()+'.');
+  if(area)benefits.push('Площадь '+area+' — указана в тексте.');
+  const pitfalls=[
+   hasIssue(/заявленный срок/)?{name:'Срок работ без пояснения',fact:'В описании указано «'+shortTime+'», но не обозначено, какие именно работы занимают этот срок.',fix:'Разделить изготовление, доставку и монтаж. Указать срок только для подтверждённого этапа.'}:null,
+   discount?{name:'Скидка без прозрачного расчёта',fact:'В объявлении заявлено: «'+discount.slice(0,110)+'».',fix:'Добавить конкретную модель, цену до/после скидки и срок акции. Без этих цифр акцию трудно оценить.'}:null,
+   hasUrgent?{name:'Неопределённый срок акции',fact:'Используется формулировка вроде «только до конца недели».',fix:'Заменить её реальной датой окончания акции после проверки условий.'}:null,
+   hasIssue(/перегруженное оформление|Рекламный призыв/)?{name:'Реклама вытесняет характеристики',fact:'В тексте используются многочисленные эмодзи, заглавные буквы и акционные призывы.',fix:'Начать с типа объекта и параметров. Оплату и гарантию вынести в отдельный блок, акцию — в конец.'}:null,
+   hasIssue(/Заголовок/)?{name:'Заголовок не отражает площадь',fact:'Заголовок «'+title+'» не содержит площадь '+area+'.',fix:'Вариант: «'+improvedTitle+'».'}:null
+  ].filter(Boolean).slice(0,4);
+  if(!pitfalls.length)pitfalls.push({name:'Не все характеристики очевидны в тексте',fact:'Получено описание объявления, но по нему нельзя оценить эффективность продаж.',fix:'Первым экраном показать характеристики, затем подтверждённые преимущества и условия заказа.'});
+  const brief=pitfalls.length+' конкретных замечания к подаче предложения. '+(payment||warranty?'При этом в тексте уже есть сильные аргументы доверия — '+[payment?'оплата после установки':'',warranty?'гарантия':''].filter(Boolean).join(' и ')+'. ':'')+'Чтобы покупатель быстрее понял ценность предложения, рекомендую сначала показать параметры объекта, затем условия сотрудничества и только после этого акцию.';
+  const copy=[
+   improvedTitle,
+   'Предлагаем '+category.toLowerCase()+(area?' площадью '+area:'')+'.',
+   ...(area?['Площадь: '+area+'.']:[]),
+   ...(payment?['Оплата после установки.']:[]),
+   ...(warranty?['Гарантия: '+warranty.toLowerCase().replace(/^гаранти[яюи]\s*/i,'')+'.']:[]),
+   'Подробности по выбранной модели, комплектации и доставке можно обсудить в чате Авито.',
+   'Напишите нам, чтобы подобрать подходящий вариант.'
+  ];
+  // Keep seller copy free of instructions/placeholder text. Unverified terms stay in audit notes.
+  const W=1240,H=1754,L=90,R=1150,INNER=1060,BOTTOM=1545;
+  const P={navy:'#14283e',blue:'#1765a9',ink:'#25354a',muted:'#687a8f',line:'#e1e8ef',green:'#177b65',cream:'#f4f8fc',soft:'#ebf4f6'};
+  const pages=[];let ctx,canvas,y,pageNo=0;
+  function page(kicker){
+   canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;ctx=canvas.getContext('2d');
+   if(!ctx)throw Error('Canvas недоступен');
+   ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
+   ctx.fillStyle=P.navy;ctx.fillRect(0,0,W,32);ctx.fillStyle=P.blue;ctx.fillRect(0,32,300,8);
+   ctx.fillStyle=P.muted;ctx.font='bold 22px Arial,sans-serif';ctx.fillText('AVITO  /  ПРАКТИЧЕСКИЙ АУДИТ',L,91);
+   ctx.fillStyle=P.line;ctx.fillRect(L,1660,INNER,2);
+   ctx.fillStyle=P.muted;ctx.font='19px Arial,sans-serif';ctx.fillText('Анализ доступного текста · без оценки статистики и фотографий',L,1705);
+   ctx.fillText('СТРАНИЦА '+(++pageNo),R-155,1705);
+   y=158;pages.push(canvas);
+   if(kicker){label(kicker);y+=12}
+  }
+  function rows(text,size=25,max=INNER,bold=false){
+   ctx.font=(bold?'bold ':'')+size+'px Arial,sans-serif';
+   const words=String(text).replace(/\s+/g,' ').trim().split(' ');const out=[];let line='';
+   for(const word of words){
+    const next=line?line+' '+word:word;
+    if(ctx.measureText(next).width<=max){line=next;continue}
+    if(line)out.push(line);line=word;
+    if(ctx.measureText(line).width>max){let acc='';for(const ch of line){if(ctx.measureText(acc+ch).width>max&&acc){out.push(acc);acc=''}acc+=ch}line=acc}
+   }if(line)out.push(line);
+   return out;
+  }
+  function write(text,{size=26,bold=false,color=P.ink,gap=14,x=L,max=INNER}={}){
+   const lines=rows(text,size,max,bold),lineH=Math.round(size*1.38);
+   for(const line of lines){ctx.font=(bold?'bold ':'')+size+'px Arial,sans-serif';ctx.fillStyle=color;ctx.fillText(line,x,y);y+=lineH}
+   y+=gap;
+  }
+  function label(text){write(text.toUpperCase(),{size:20,bold:true,color:P.blue,gap:9})}
+  function heading(text){write(text,{size:37,bold:true,color:P.navy,gap:17})}
+  function divider(){ctx.fillStyle=P.line;ctx.fillRect(L,y,INNER,2);y+=26}
+  function callout(title,text,color=P.blue){
+   const lineH=38,all=rows(text,27,INNER-64);
+   const h=all.length*lineH+82,top=y-22;
+   ctx.fillStyle=P.cream;ctx.fillRect(L,top,INNER,h);
+   ctx.fillStyle=color;ctx.fillRect(L,top,6,h);
+   ctx.fillStyle=color;ctx.font='bold 21px Arial,sans-serif';ctx.fillText(title.toUpperCase(),L+25,top+36);
+   y=top+79;
+   for(const line of all){ctx.fillStyle=P.ink;ctx.font='27px Arial,sans-serif';ctx.fillText(line,L+25,y);y+=lineH}
+   y=top+h+27;
+  }
+  // Page one: compact executive summary and visible substance.
+  page('01   /   КОММЕРЧЕСКОЕ ЗАКЛЮЧЕНИЕ');
+  heading(title);
+  write('Объявление № '+candidate.itemId+' · '+new Date().toLocaleDateString('ru-RU'),{size:22,color:P.muted,gap:25});
+  callout('Что можно улучшить',brief);
+  label('СИЛЬНЫЕ СТОРОНЫ ПРЕДЛОЖЕНИЯ');
+  for(const advantage of (benefits.length?benefits:['Текст содержит информацию об объекте; конкретные условия сотрудничества требуют уточнения.']).slice(0,3)){
+   write('✓  '+advantage,{size:27,gap:13});
+  }
+  divider();label('ЧТО Я РЕКОМЕНДУЮ ИСПРАВИТЬ В ПЕРВУЮ ОЧЕРЕДЬ');
+  for(const [i,p] of pitfalls.slice(0,3).entries()){
+   write((i+1)+'. '+p.name,{size:29,bold:true,color:P.navy,gap:7});
+   write(p.fact,{size:25,gap:7});
+   write('Решение: '+p.fix,{size:25,color:P.green,gap:19});
+  }
+  // Page two: action plan and actual ready-to-use seller copy; never print huge filler.
+  page('02   /   ГОТОВОЕ РЕШЕНИЕ');
+  heading('Новый вариант объявления');
+  label('ЗАГОЛОВОК ДЛЯ ТЕСТИРОВАНИЯ');
+  write(improvedTitle,{size:33,bold:true,color:P.blue,gap:25});
+  divider();label('ПРОДАЮЩЕЕ ОПИСАНИЕ  /  ГОТОВЫЙ ЧЕРНОВИК');
+  for(const part of copy)write(part,{size:27,gap:16});
+  divider();
+  label('КОНКРЕТНЫЙ ПЛАН ПРАВОК');
+  for(const line of [
+   '01  Поставить характеристики объекта в начало и убрать дублирующие рекламные призывы.',
+   '02  Сохранить сильные аргументы об оплате и гарантии, уточнив условия их действия.',
+   '03  Отдельно пояснить этапы работ и условия скидки, если они заявлены.',
+   '04  Проверить обложку, остальные фотографии и цену в живой карточке перед запуском теста.'
+  ])write(line,{size:25,gap:17});
+  write('Этот отчёт основан на открытом тексте. Оценка просмотров, позиции в поиске и прогноз заявок без статистики невозможны.',{size:21,color:P.muted,gap:7});
+  // If any page became too dense, fail rather than silently clip.
+  if(y>BOTTOM)throw Error('Содержимое отчёта превышает страницу. Нужна корректировка вёрстки.');
+  const encoder=new TextEncoder(),chunks=[];let cursor=0;
+  function put(data){
+   const bytes=typeof data==='string'?encoder.encode(data):data;
+   chunks.push(bytes);cursor+=bytes.length;
+  }
+  function b64bytes(data){
+   const binary=atob(data);const out=new Uint8Array(binary.length);
+   for(let i=0;i<binary.length;i++)out[i]=binary.charCodeAt(i);
+   return out;
+  }
+  const objects={},count=2+pages.length*3;
+  put('%PDF-1.4\n');
+  function obj(i,content){objects[i]=cursor;put(i+' 0 obj\n');put(content);put('\nendobj\n')}
+  obj(1,'<< /Type /Catalog /Pages 2 0 R >>');
+  obj(2,'<< /Type /Pages /Count '+pages.length+' /Kids ['+pages.map((_,i)=>(3+3*i)+' 0 R').join(' ')+'] >>');
+  for(let i=0;i<pages.length;i++){
+   const page=3+3*i,img=page+1,stream=page+2;
+   const jpg=b64bytes(pages[i].toDataURL('image/jpeg',0.89).split(',')[1]);
+   obj(page,'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /XObject << /Im0 '+img+' 0 R >> >> /Contents '+stream+' 0 R >>');
+   objects[img]=cursor;put(img+' 0 obj\n<< /Type /XObject /Subtype /Image /Width '+W+' /Height '+H+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+jpg.length+' >>\nstream\n');put(jpg);put('\nendstream\nendobj\n');
+   const ops='q\n595.28 0 0 841.89 0 0 cm\n/Im0 Do\nQ\n';
+   obj(stream,'<< /Length '+encoder.encode(ops).length+' >>\nstream\n'+ops+'endstream');
+  }
+  const xref=cursor;put('xref\n0 '+(count+1)+'\n0000000000 65535 f \n');
+  for(let i=1;i<=count;i++)put(String(objects[i]).padStart(10,'0')+' 00000 n \n');
+  put('trailer\n<< /Size '+(count+1)+' /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF');
+  const blob=new Blob(chunks,{type:'application/pdf'});
+  const link=document.getElementById('pdfDownloadLink');
+  if(!link)throw Error('Кнопка скачивания не найдена. Обнови страницу.');
+  if(window.currentAuditPdfUrl)URL.revokeObjectURL(window.currentAuditPdfUrl);
+  window.currentAuditPdfUrl=URL.createObjectURL(blob);
+  link.href=window.currentAuditPdfUrl;
+  link.download='Avito_Client_Audit_v3_'+String(candidate.itemId||'lead').replace(/[^0-9a-z_-]/gi,'')+'.pdf';
+  document.getElementById('pdfDownloadHint').textContent='Клиентский аудит V3. Размер: '+Math.ceil(blob.size/1024)+' КБ. Нажми «Скачать PDF». Если загрузка не начнётся, открой этот сайт в обычном Google Chrome.';
+  document.getElementById('pdfDownloadDialog').showModal();
+  const status=$('mailImportStatus');
+  if(status)status.textContent='PDF подготовлен. Нажми «Скачать PDF» в появившемся окне.';
+
+ }catch(err){
+  const status=$('mailImportStatus');
+  if(status)status.textContent='Не удалось создать PDF: '+(err?.message||'неизвестная ошибка');
+  alert('Не удалось создать PDF. '+(err?.message||'Попробуй другой браузер.'));
+ }
+}
+
+
+const AUTO_AUDIT_PENDING_KEY='avito_leads_auto_audit_pending';
+function markAutoAudit(id){
+ sessionStorage.setItem(AUTO_AUDIT_PENDING_KEY,String(id));
+ const status=$('mailImportStatus');
+ if(status) status.textContent='Открываю объявление. Когда расширение Chrome прочитает карточку, PDF будет подготовлен здесь автоматически.';
+}
+
+function renderMailCandidates(){
+ const container=$('mailCandidatesList');
+ if(!container)return;
+ const search=String($('mailAuditFilter')?.value||'all');
+ const sorted=[...mailCandidates].sort((a,b)=>analyzeMailCandidate(b).points-analyzeMailCandidate(a).points);
+ const selected=sorted.filter(x=>search==='all'||(search==='priority'&&analyzeMailCandidate(x).tier==='Приоритетный')||(search==='review'&&analyzeMailCandidate(x).tier!=='Приоритетный'));
+ const stats=$('mailAuditSummary');
+ if(stats){
+  const priority=mailCandidates.filter(x=>analyzeMailCandidate(x).tier==='Приоритетный').length;
+  stats.textContent='Всего: '+mailCandidates.length+' · Приоритетных по теме: '+priority+' · Проверка оформления возможна после получения описания.';
+ }
+ container.innerHTML=selected.length?selected.map(x=>{
+  const assessment=analyzeMailCandidate(x);
+  const safeLink=validDigestLink(x.trackingUrl,x.itemId)?x.trackingUrl:'';
+  const confirmedPublic=typeof x.publicUrl==='string'&&validUrl(x.publicUrl)&&new RegExp('_'+x.itemId+'(?:[/?#]|$)').test(x.publicUrl);const action=confirmedPublic?'<a class="btn primary avito-open" data-auto-audit-id="'+esc(x.itemId)+'" href="'+esc(x.publicUrl)+'" target="_blank" rel="noopener noreferrer">Открыть на Авито и разобрать</a>':safeLink?'<a class="btn primary avito-open" data-auto-audit-id="'+esc(x.itemId)+'" href="'+esc(safeLink)+'" target="_blank" rel="noopener noreferrer">Открыть на Авито и разобрать</a>':'<button class="avito-open" data-mail-action="missinglink" data-mail-id="'+esc(x.itemId)+'">🔒 Ссылка закрыта — восстановить</button>';
+  const reasons=assessment.reasons.map(reason=>'<li>'+esc(reason)+'</li>').join('');
+  const audit=evidenceAudit(x);
+  const auditHtml=x.auditDescription?'<div class="panel"><b>Аудит по предоставленным данным:</b> '+esc(audit.state)+(audit.issues.length?'<p><b>Возможные недостатки:</b> '+esc(audit.issues.join('; '))+'</p>':'<p>По проверенным признакам недостатков не обнаружено.</p>')+(audit.strengths.length?'<p><b>Подтверждено:</b> '+esc(audit.strengths.join('; '))+'</p>':'')+'</div>':'';
+  return '<article class="lead"><div class="leadhead"><div><h3>'+esc(x.name)+'</h3><div class="muted">'+esc(x.niche)+' · ID '+esc(x.itemId)+' · '+esc(x.city||'Город не определён')+'</div></div><span class="tag">'+esc(assessment.tier)+'</span></div><p class="hint"><b>Предварительная оценка по заголовку — не аудит.</b> Если расширение передало текст, показан аудит по доступному описанию. Качество фотографий и актуальность проверяются отдельно.</p><ul class="hint">'+reasons+'</ul><div class="actions">'+action+'<button data-mail-action="audit" data-mail-id="'+esc(x.itemId)+'">Проверить детали</button><button data-mail-action="offer" data-mail-id="'+esc(x.itemId)+'">Скопировать предложение</button><button data-mail-action="pdf" data-mail-id="'+esc(x.itemId)+'">PDF-разбор текста</button><button data-mail-action="promote" data-mail-id="'+esc(x.itemId)+'">Добавить после проверки</button><button data-mail-action="remove" data-mail-id="'+esc(x.itemId)+'">Убрать</button></div></article>';
+ }).join(''):'<div class="panel"><h3>Пока нет новых кандидатов</h3><p class="muted">Обнови список или выбери другой фильтр.</p></div>';
+}
+$('mailAuditFilter').onchange=renderMailCandidates;
+$('importMailCandidates').onclick=()=>$('mailCandidatesInput').click();
+$('mailCandidatesInput').onchange=async e=>{
+ const file=e.target.files[0];if(!file)return;
+ try{
+  if(file.size>2000000)throw Error('Файл слишком большой');
+  const data=JSON.parse((await file.text()).replace(/^\uFEFF/,''));
+  if(data.format!=='avito-mail-candidates-v1'||!Array.isArray(data.items))throw Error('Нужен приватный файл avito-mail-candidates.json из GitHub');
+  const seen=new Set(mailCandidates.map(x=>x.itemId));let added=0;
+  for(const item of data.items.slice(0,500)){
+   const id=String(item.itemId||'').trim();
+   if(!/^[0-9]{7,15}$/.test(id)||seen.has(id))continue;
+   mailCandidates.push({itemId:id,name:String(item.name||'Объявление Авито').slice(0,200),city:String(item.city||'Не определён').slice(0,100),niche:String(item.niche||'Другое').slice(0,100)});
+   seen.add(id);added++;
+  }
+  saveMailCandidates();renderMailCandidates();
+  $('mailImportStatus').textContent='Добавлено '+added+' кандидатов; всего '+mailCandidates.length+'. Повторы пропущены.';
+ }catch(err){$('mailImportStatus').textContent='Ошибка: '+err.message}
+ e.target.value='';
+};
+$('mailCandidatesList').addEventListener('click',e=>{
+ const link=e.target.closest('a[data-auto-audit-id]');
+ if(link)markAutoAudit(link.dataset.autoAuditId);
+},true);
+$('mailCandidatesList').onclick=async e=>{
+ const b=e.target.closest('button[data-mail-action]');if(!b)return;
+ const candidate=mailCandidates.find(x=>x.itemId===b.dataset.mailId);if(!candidate)return;
+ if(b.dataset.mailAction==='audit'){
+  activeAuditId=candidate.itemId;
+  $('cardAuditDescription').value=candidate.auditDescription||'';
+  $('cardAuditPhotos').value=candidate.auditPhotos??'';
+  $('cardAuditContact').value=candidate.auditContact||'unknown';
+  $('cardAuditStatus').textContent='';
+  $('cardAuditDialog').showModal();return;
+ }
+ if(b.dataset.mailAction==='pdf'){exportCandidatePdf(candidate);return;}
+ if(b.dataset.mailAction==='offer'){
+  const msg=generateMailOffer(candidate);
+  if(navigator.clipboard?.writeText){navigator.clipboard.writeText(msg).then(()=>{const status=$('mailImportStatus');if(status)status.textContent='Предложение скопировано — можно вставить в чат продавца. Сообщение не отправлено.'}).catch(()=>{prompt('Скопируй предложение:',msg)});}
+  else prompt('Скопируй предложение:',msg);
+  return;
+ }
+ if(b.dataset.mailAction==='missinglink'){
+  $('linkUnlockPanel').style.display='block';
+  $('linkUnlockForm').style.display='block';
+  $('linkUnlockPanel').scrollIntoView({behavior:'smooth',block:'center'});
+  $('quickLinksKey').focus();return;
+ }
+ if(b.dataset.mailAction==='addlink'){
+  const link=prompt('Вставь ИСХОДНУЮ ссылку из письма Авито для объявления ID '+candidate.itemId+':','');
+  if(link===null)return;
+  if(!validDigestLink(link,candidate.itemId)){alert('Нужна исходная ссылка из письма с itemId='+candidate.itemId);return}
+  candidate.trackingUrl=link;saveMailCandidates();renderMailCandidates();return;
+ }
+ if(b.dataset.mailAction==='remove'){
+  if(confirm('Убрать кандидата из списка?')){mailCandidates=mailCandidates.filter(x=>x.itemId!==candidate.itemId);saveMailCandidates();renderMailCandidates()}
+  return;
+ }
+ const url=prompt('Открой объявление в браузере и вставь сюда его ПРЯМУЮ ссылку Авито (не ссылку /autosearch/get/):','');
+ if(url===null)return;
+ if(!validUrl(url)||url.includes('/autosearch/get/')||!new RegExp('_'+candidate.itemId+'(?:[/?#]|$)').test(url)){alert('Нужна прямая ссылка на объявление с ID '+candidate.itemId);return}
+ if(leads.some(x=>x.url&&x.url.split('?')[0]===url.split('?')[0])){alert('Это объявление уже есть в базе');return}
+ const city=prompt('Укажи город объявления:',candidate.city==='Не определён'?'':candidate.city);
+ if(city===null||!city.trim()){alert('Для базы нужен город');return}
+ const nicheOptions=[...$('niche').options].map(x=>x.value);
+ leads.push({id:uid(),name:candidate.name,city:city.trim(),niche:nicheOptions.includes(candidate.niche)?candidate.niche:'Другое',status:'Новый',priority:'Средний',url:url.trim(),verified:'',issues:'',recommend:'',notes:'Импорт из рассылки Авито, ID '+candidate.itemId+'; оформление не проверено',created:new Date().toISOString()});
+ save();render();mailCandidates=mailCandidates.filter(x=>x.itemId!==candidate.itemId);saveMailCandidates();renderMailCandidates();tabs('leads');
+};
+
+window.addEventListener('message',event=>{
+ if(event.source!==window||event.origin!==location.origin||event.data?.type!=='AVITO_LEADS_CARD_OBSERVED')return;
+ const d=event.data.payload||{};
+ const id=String(d.itemId||'');
+ if(!/^[0-9]{7,15}$/.test(id)||typeof d.description!=='string'||d.description.trim().length<40)return;
+ const c=mailCandidates.find(x=>x.itemId===id);
+ if(!c)return;
+ const src=String(d.sourceUrl||'');
+ try{
+  const u=new URL(src);
+  if(u.protocol!=='https:'||!['avito.ru','www.avito.ru'].includes(u.hostname)||!u.pathname.endsWith('_'+id))return;
+ }catch{return}
+ const pendingId=sessionStorage.getItem(AUTO_AUDIT_PENDING_KEY);
+ if(c.auditDescription===d.description&&c.auditSource==='Расширение Chrome'&&pendingId!==id)return;
+ c.auditDescription=d.description.slice(0,20000);
+ c.auditPhotos=Number.isInteger(d.photos)&&d.photos>=1&&d.photos<=500?d.photos:'';
+ c.auditPrice=typeof d.price==='string'?d.price.slice(0,100):'';
+ if(c.city==='Не определён'&&typeof d.city==='string'&&d.city.trim())c.city=d.city.slice(0,120);
+ c.auditContact='unknown';
+ c.auditDate=d.observedAt||new Date().toISOString();
+ c.auditSource='Расширение Chrome';
+ c.publicUrl=src;
+ saveMailCandidates();renderMailCandidates();
+ const status=$('mailImportStatus');
+ if(status)status.textContent='Получены реальные данные объявления «'+c.name+'»'+(c.auditPrice?' · цена: '+c.auditPrice:'')+'. PDF доступен для скачивания.';
+ if(pendingId===id){
+   sessionStorage.removeItem(AUTO_AUDIT_PENDING_KEY);
+   exportCandidatePdf(c);
+ }
+});
+
+loadMailCandidates();renderMailCandidates();syncMailCandidates();
+window.postMessage({type:'AVITO_LEADS_READY'},location.origin);
+
+load();render();if('serviceWorker'in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script></body></html>
