@@ -3,6 +3,7 @@
 Запускается вручную. Читает ТОЛЬКО совпавшие письма и выводит ТОЛЬКО
 сводные числа, без адресов, тем, текстов и ссылок. Ничего не публикует.
 """
+import base64
 import datetime as dt
 from email import policy
 from email.parser import BytesParser
@@ -64,6 +65,43 @@ def get_listing_links(message):
                 links.add(parsed.scheme + "://" + parsed.hostname + parsed.path)
     return links
 
+def decode_imap_utf7(value):
+    """Decode IMAP modified UTF-7 folder names without extra dependencies."""
+    def decode(match):
+        encoded = match.group(1)
+        if not encoded:
+            return "&"
+        data = encoded.replace(",", "/")
+        data += "=" * (-len(data) % 4)
+        return base64.b64decode(data).decode("utf-16-be", errors="replace")
+    return re.sub(r"&([A-Za-z0-9+,]*)-", decode, value)
+
+def mailbox_name(raw):
+    """Extract final mailbox name from an IMAP LIST response."""
+    value = raw.decode("ascii", errors="replace") if isinstance(raw, bytes) else str(raw)
+    match = re.search(r'(?:"((?:[^"\\]|\\.)*)"|(\S+))\s*$', value)
+    if not match:
+        return ""
+    name = match.group(1) if match.group(1) is not None else match.group(2)
+    return decode_imap_utf7(name.replace('\\"', '"'))
+
+def find_folders(client):
+    status, lines = client.list()
+    if status != "OK":
+        raise imaplib.IMAP4.error("Folder listing failed")
+    folders = ["INBOX"]
+    for line in lines or []:
+        if not line:
+            continue
+        name = mailbox_name(line)
+        normalized = name.casefold().strip()
+        if (normalized == "рассылки" or normalized.endswith("/рассылки")
+            or normalized == "newsletters" or normalized.endswith("/newsletters")
+            or normalized == "subscriptions" or normalized.endswith("/subscriptions")):
+            if name not in folders:
+                folders.append(name)
+    return folders
+
 def main():
     address = os.getenv("MAILRU_EMAIL", "").strip()
     password = os.getenv("MAILRU_APP_PASSWORD", "")
@@ -74,42 +112,49 @@ def main():
     try:
         client = imaplib.IMAP4_SSL("imap.mail.ru", 993, timeout=20)
         client.login(address, password)
-        status, _ = client.select("INBOX", readonly=True)
-        if status != "OK":
-            print("Не удалось выбрать папку Входящие.")
-            return 1
+        folders = find_folders(client)
         since = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=14)).strftime("%d-%b-%Y")
-        status, data = client.search(None, "SINCE", since, "FROM", '"avito.ru"')
-        if status != "OK":
-            print("Не удалось выполнить поиск.")
-            return 1
-        ids = (data[0].split() if data and data[0] else [])[-30:]
         emails = 0
         candidates = set()
         skipped = 0
-        for message_id in ids:
-            status, result = client.fetch(message_id, "(BODY.PEEK[])")
+        scanned = 0
+        successfully_opened = 0
+        for folder in folders:
+            status, _ = client.select(folder, readonly=True)
             if status != "OK":
-                skipped += 1
                 continue
-            payload = next((part[1] for part in result if isinstance(part, tuple) and isinstance(part[1], bytes)), None)
-            if not payload or len(payload) > 1_500_000:
-                skipped += 1
-                continue
-            message = BytesParser(policy=policy.default).parsebytes(payload)
-            if not sender_ok(message):
-                skipped += 1
-                continue
-            emails += 1
-            candidates.update(get_listing_links(message))
-        print(f"Проверено потенциальных писем за 14 дней: {len(ids)}")
+            successfully_opened += 1
+            status, data = client.search(None, "SINCE", since, "FROM", '"avito.ru"')
+            if status != "OK":
+                print("Не удалось выполнить поиск в одной из папок.")
+                return 1
+            ids = (data[0].split() if data and data[0] else [])[-30:]
+            scanned += len(ids)
+            for message_id in ids:
+                status, result = client.fetch(message_id, "(BODY.PEEK[])")
+                if status != "OK":
+                    skipped += 1
+                    continue
+                payload = next((part[1] for part in result if isinstance(part, tuple) and isinstance(part[1], bytes)), None)
+                if not payload or len(payload) > 1_500_000:
+                    skipped += 1
+                    continue
+                message = BytesParser(policy=policy.default).parsebytes(payload)
+                if not sender_ok(message):
+                    skipped += 1
+                    continue
+                emails += 1
+                candidates.update(get_listing_links(message))
+        print(f"Папок проверено: {successfully_opened}")
+        print(f"Папка «Рассылки» обнаружена через IMAP: {'да' if len(folders) > 1 else 'нет'}")
+        print(f"Проверено потенциальных писем за 14 дней: {scanned}")
         print(f"Писем с подтверждённым доменом отправителя: {emails}")
         print(f"Уникальных прямых ссылок с ID объявления Авито: {len(candidates)}")
         print(f"Пропущено писем: {skipped}")
         print("Предварительная проверка: актуальность объявлений и назначение писем не подтверждены.")
         print("Импорт в публичный candidates.json выключен. Личные данные не публикуются.")
         return 0
-    except (imaplib.IMAP4.error, OSError, TimeoutError):
+    except (imaplib.IMAP4.error, OSError, TimeoutError, ValueError):
         print("Ошибка IMAP при предварительной проверке; детали сервера скрыты.")
         return 1
     finally:
