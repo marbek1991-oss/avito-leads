@@ -2,6 +2,7 @@
 :root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#17233a;background:#f4f7fc;font-size:15px}*{box-sizing:border-box}body{margin:0}header{background:linear-gradient(125deg,#142b53,#1164b9);color:#fff;padding:23px 18px 28px}header .wrap{max-width:1050px;margin:auto}h1{font-size:29px;margin:2px 0 5px}h2{font-size:19px}h3{font-size:16px}p{line-height:1.5}small,.muted{color:#65748a}.intro{color:#d6e8ff;margin:0}main{max-width:1050px;margin:-14px auto 50px;padding:0 14px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat,.panel,.lead{background:white;box-shadow:0 4px 18px #1a37540d;border:1px solid #e1e8f2;border-radius:15px}.stat{padding:16px}.stat b{font-size:26px;display:block;color:#1656a3}.stat span{font-size:12px;color:#5d6e85}.panel{margin:13px 0;padding:18px}.warning{background:#fff9e9;border-left:4px solid #d5952a;padding:12px 14px;border-radius:8px;line-height:1.5}.tabs{display:flex;gap:8px;overflow:auto;margin:17px 0}.tabs button{flex:1;min-width:110px}.tab{display:none}.tab.active{display:block}button,.btn{cursor:pointer;border:0;border-radius:10px;padding:11px 15px;font-weight:650;font-size:14px;background:#e9f1fd;color:#1654a4;text-decoration:none;display:inline-block}button.primary,.btn.primary{background:#1766bf;color:#fff}button:disabled{opacity:.5;cursor:not-allowed}.buttonbar{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}label{font-size:13px;color:#344861;font-weight:650;display:flex;gap:6px;flex-direction:column}input,select,textarea{width:100%;padding:11px;border-radius:9px;border:1px solid #cfdae9;background:#fff;font:inherit;color:#16243a}textarea{min-height:85px;resize:vertical}.full{grid-column:1/-1}.lead{padding:17px;margin:10px 0}.leadhead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.lead h3{margin:0 0 5px}.tag{font-size:12px;padding:5px 8px;background:#e9f1ff;color:#145aaa;border-radius:50px;white-space:nowrap}.lead .summary{white-space:pre-wrap;line-height:1.5}.lead a{color:#0867b9;word-break:break-all}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:13px}.actions button{padding:8px 11px;font-size:12px}.hidden{display:none!important}.hint{font-size:12px;color:#68778a;margin-top:7px}.foot{font-size:12px;color:#8793a3;text-align:center;margin-top:25px}dialog{border:0;border-radius:17px;box-shadow:0 20px 70px #10233f55;width:min(690px,95vw);max-height:90vh;overflow:auto;padding:20px}dialog::backdrop{background:#07162e88}#searchLink{margin-top:8px}pre{white-space:pre-wrap;word-break:break-word}.divider{border:0;border-top:1px solid #e0e8f1;margin:18px 0}@media(max-width:600px){.formgrid{grid-template-columns:1fr}.stats{gap:6px}.stat{padding:12px}.stat b{font-size:23px}.panel{padding:14px}.tabs button{padding:10px}.leadhead{flex-direction:column}header{padding-bottom:32px}}
 
 /* Основной экран: минимум действий, технические настройки остаются доступны в дополнительных разделах. */
+#tab-mail .lead .actions .avito-open{display:inline-flex!important;align-items:center;justify-content:center;background:#1766bf!important;color:white!important;font-size:14px!important;padding:11px 15px!important;text-decoration:none!important;}
 #tab-mail>.panel:nth-of-type(2),#tab-mail>.panel:nth-of-type(4){display:none}
 #tab-mail #importMailCandidates,#tab-mail #importMailLinks,#tab-mail .buttonbar>a.btn{display:none}
 #tab-mail .lead .hint>li{margin:3px 0}
@@ -478,7 +479,7 @@ function renderMailCandidates(){
  container.innerHTML=selected.length?selected.map(x=>{
   const assessment=analyzeMailCandidate(x);
   const safeLink=validDigestLink(x.trackingUrl,x.itemId)?x.trackingUrl:'';
-  const confirmedPublic=typeof x.publicUrl==='string'&&validUrl(x.publicUrl)&&new RegExp('_'+x.itemId+'(?:[/?#]|$)').test(x.publicUrl);const action=confirmedPublic?'<a class="btn primary" href="'+esc(x.publicUrl)+'" target="_blank" rel="noopener noreferrer">Открыть на Авито</a>':safeLink?'<a class="btn primary" href="'+esc(safeLink)+'" target="_blank" rel="noopener noreferrer">Открыть на Авито</a>':'<button data-mail-action="missinglink" data-mail-id="'+esc(x.itemId)+'">Открыть на Авито · нет ссылки</button>';
+  const confirmedPublic=typeof x.publicUrl==='string'&&validUrl(x.publicUrl)&&new RegExp('_'+x.itemId+'(?:[/?#]|$)').test(x.publicUrl);const action=confirmedPublic?'<a class="btn primary avito-open" href="'+esc(x.publicUrl)+'" target="_blank" rel="noopener noreferrer">Открыть на Авито</a>':safeLink?'<a class="btn primary avito-open" href="'+esc(safeLink)+'" target="_blank" rel="noopener noreferrer">Открыть на Авито</a>':'<button class="primary avito-open" data-mail-action="missinglink" data-mail-id="'+esc(x.itemId)+'">Открыть на Авито</button><span class="hint">Ссылка пока не получена</span>';
   const reasons=assessment.reasons.map(reason=>'<li>'+esc(reason)+'</li>').join('');
   const audit=evidenceAudit(x);
   const auditHtml=x.auditDescription?'<div class="panel"><b>Аудит по предоставленным данным:</b> '+esc(audit.state)+(audit.issues.length?'<p><b>Возможные недостатки:</b> '+esc(audit.issues.join('; '))+'</p>':'<p>По проверенным признакам недостатков не обнаружено.</p>')+(audit.strengths.length?'<p><b>Подтверждено:</b> '+esc(audit.strengths.join('; '))+'</p>':'')+'</div>':'';
@@ -505,7 +506,7 @@ $('mailCandidatesInput').onchange=async e=>{
  }catch(err){$('mailImportStatus').textContent='Ошибка: '+err.message}
  e.target.value='';
 };
-$('mailCandidatesList').onclick=e=>{
+$('mailCandidatesList').onclick=async e=>{
  const b=e.target.closest('button[data-mail-action]');if(!b)return;
  const candidate=mailCandidates.find(x=>x.itemId===b.dataset.mailId);if(!candidate)return;
  if(b.dataset.mailAction==='audit'){
@@ -525,8 +526,13 @@ $('mailCandidatesList').onclick=e=>{
  }
  if(b.dataset.mailAction==='missinglink'){
   const status=$('mailImportStatus');
-  if(status)status.textContent='Для объявления ID '+candidate.itemId+' ссылка ещё не получена. Обновляю рассылку; если ссылка не появится, проверь сохранённый ключ в этом браузере.';
-  syncMailCandidates();return;
+  if(status)status.textContent='Пробую получить ссылку для объявления ID '+candidate.itemId+'…';
+  await syncMailCandidates();
+  const fresh=mailCandidates.find(x=>x.itemId===candidate.itemId);
+  const link=fresh&&(typeof fresh.publicUrl==='string'&&validUrl(fresh.publicUrl)&&new RegExp('_'+fresh.itemId+'(?:[/?#]|$)').test(fresh.publicUrl)?fresh.publicUrl:validDigestLink(fresh.trackingUrl,fresh.itemId)?fresh.trackingUrl:'');
+  if(link){window.open(link,'_blank','noopener,noreferrer');return}
+  alert('Кнопка восстановлена, но ссылка на это объявление пока недоступна в данном браузере. Непроверенную ссылку по ID не создаю. Если ранее всё открывалось на другом устройстве, открой Авито Лиды там: локальный ключ шифрования и сохранённые ссылки не переносятся автоматически.');
+  return;
  }
  if(b.dataset.mailAction==='addlink'){
   const link=prompt('Вставь ИСХОДНУЮ ссылку из письма Авито для объявления ID '+candidate.itemId+':','');
