@@ -311,32 +311,53 @@ $('runCardAudit').onclick=()=>{
 };
 
 document.getElementById('closePdfDownload').onclick=()=>document.getElementById('pdfDownloadDialog').close();
+
+function specificCardFindings(c){
+ const body=String(c.auditDescription||'').trim();
+ if(body.length<100)return [];
+ const title=String(c.name||'Объявление').trim();
+ const report=[];
+ const checks=[
+  {label:'Размеры и параметры',re:/\b(?:\d+(?:[.,]\d+)?\s*(?:м²|м2|метр|мм|см|м\b)|размер|площад|габарит|ширин|длин|высот)\b/i,why:'покупателю сложно сравнить предложения без понятных характеристик',fix:'Добавить отдельный блок «Размеры и характеристики» с фактическими параметрами изделия или услуги.'},
+  {label:'Комплектация и материалы',re:/материал|комплектац|стен|утеплен|профил|каркас|фундамент|состав работ/i,why:'неясно, что именно входит в предложение',fix:'Указать материалы, базовую комплектацию и дополнительные опции, опираясь на реальные условия продавца.'},
+  {label:'Сроки и организация работ',re:/срок|дней|недел|месяц|доставк|монтаж|установк|выезд|самовывоз/i,why:'клиенту приходится отдельно уточнять логистику и сроки',fix:'Добавить известные условия изготовления, доставки и монтажа; если сроки индивидуальны, так и написать.'},
+  {label:'Гарантия и договор',re:/гарант|договор|акт прием|официальн/i,why:'потенциальному покупателю не хватает информации о порядке сотрудничества',fix:'Уточнить, предоставляются ли договор или гарантия; не обещать их, если продавец не подтвердил.'},
+  {label:'Цена и состав стоимости',re:/₽|руб|стоимост|цен|оплат|рассрочк|бюджет/i,why:'неясно, как формируется стоимость заказа',fix:'Пояснить, что входит в указанную стоимость и от чего зависит итоговая цена.'}
+ ];
+ for(const check of checks){
+  if(!check.re.test(body)){
+   report.push({title:check.label,observation:'В предоставленном описании не найдено явного упоминания: '+check.label.toLowerCase()+'.',impact:check.why,recommendation:check.fix});
+  }
+ }
+ if(title.length<25)report.unshift({title:'Заголовок',observation:'Заголовок содержит '+title.length+' символов: «'+title+'».',impact:'В кратком названии может не хватать конкретики для выбора.',recommendation:'Уточнить тип предложения и главное отличие, не добавляя неподтверждённых характеристик.'});
+ const photos=String(c.auditPhotos??'');
+ if(photos==='0'||(photos!==''&&Number(photos)>0&&Number(photos)<3)){
+  report.push({title:'Фотографии',observation:'Указано фотографий: '+photos+'.',impact:'Небольшой визуальный ряд может не показать разные стороны товара или результата работ.',recommendation:'Добавить несколько разных реальных ракурсов, примеры выполненных работ и детали комплектации.'});
+ }
+ return report.slice(0,5);
+}
+
 function exportCandidatePdf(candidate){
+ if(String(candidate.auditDescription||'').trim().length<100){
+  activeAuditId=candidate.itemId;
+  $('cardAuditDescription').value=candidate.auditDescription||'';
+  $('cardAuditPhotos').value=candidate.auditPhotos??'';
+  $('cardAuditContact').value=candidate.auditContact||'unknown';
+  $('cardAuditStatus').textContent='Для содержательного PDF нужны данные самой карточки. Открой объявление и скопируй описание сюда (не менее 100 символов). Пока есть только заголовок — этого недостаточно для аудита.';
+  $('cardAuditDialog').showModal();
+  return;
+ }
  try{
   const assessment=analyzeMailCandidate(candidate);
   const evidence=evidenceAudit(candidate);
   const known=!!String(candidate.auditDescription||'').trim();
   const confirmed=typeof candidate.publicUrl==='string'&&/^https:\/\/(?:www\.)?avito\.ru\//.test(candidate.publicUrl)&&new RegExp('_'+candidate.itemId+'(?:[/?#]|$)').test(candidate.publicUrl);
+  const findings=specificCardFindings(candidate);
   const sections=[
-   {title:'Что известно',items:[known?'Получено описание карточки: анализируется доступный текст, не всё объявление.':'Из рассылки доступны только название, категория и ID. Полная карточка не изучалась.', 'Предварительный приоритет: '+assessment.tier]},
-   {title:'Признаки по названию',items:assessment.reasons},
-   ...(known&&evidence.issues.length?[{title:'Возможные точки улучшения',items:evidence.issues}]:[]),
-   ...(known&&evidence.strengths.length?[{title:'Что есть в описании',items:evidence.strengths}]:[]),
-   {title:'Рекомендации',items:[
-    'Уточнить, раскрывает ли заголовок услугу и выгоды для покупателя.',
-    'Проверить понятность комплектации, сроков, стоимости и условий заказа.',
-    'Оценить фотографии: показывают ли они результат, детали и качество.',
-    'Дополнить карточку ответами на частые вопросы, если их нет.'
-   ]},
-   {title:'Что не проверено',items:known?[
-    'Качество фотографий визуально не оценивалось.',
-    'Актуальность и коммерческие результаты объявления не подтверждены.',
-    'Перед отправкой продавцу проверьте каждое наблюдение.'
-   ]:[
-    'Описание и качество фотографий не проверялись.',
-    'Цена, условия и актуальность не подтверждены.',
-    'Это предварительный план проверки, не заключение о недостатках.'
-   ]}
+   {title:'Основание для анализа',items:['Заголовок: '+candidate.name,'Проверено только предоставленное описание ('+candidate.auditDescription.trim().length+' символов).','Проверка не включает актуальность карточки и визуальное качество изображений.']},
+   ...findings.flatMap((f,i)=>[{title:(i+1)+'. '+f.title,items:['Наблюдение: '+f.observation,'Почему важно: '+f.impact,'Рекомендация: '+f.recommendation]}]),
+   ...(findings.length?[]:[{title:'Результат анализа текста',items:['По доступному описанию не выявлено перечисленных типовых пробелов. Это не подтверждает качество всей карточки.']}]),
+   {title:'Следующие шаги',items:['Сверить выводы с открытой карточкой Авито.','Уточнить фактические характеристики и условия у продавца.','После подтверждения исправить конкретные фрагменты заголовка и описания.']}
   ];
   // Self-contained A4 JPEG-backed PDF. Text drawn by the browser's native font engine,
   // so Russian characters render without external libraries or popup windows.
@@ -348,7 +369,7 @@ function exportCandidatePdf(candidate){
    ctx.fillStyle='#ffffff';ctx.fillRect(0,0,W,H);
    ctx.fillStyle='#155caa';ctx.fillRect(0,0,W,21);
    ctx.fillStyle='#536b86';ctx.font='24px Arial, sans-serif';
-   ctx.fillText('АВИТО ЛИДЫ  /  ПРЕДВАРИТЕЛЬНЫЙ РАЗБОР',L,82);
+   ctx.fillText('АВИТО ЛИДЫ  /  РАЗБОР ПО ОПИСАНИЮ',L,82);
    ctx.fillStyle='#d8e3ef';ctx.fillRect(L,1680,R-L,2);
    ctx.fillStyle='#64748b';ctx.font='20px Arial, sans-serif';
    ctx.fillText('Данные для ознакомления. Проверяйте выводы перед отправкой.',L,1720);
